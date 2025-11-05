@@ -4,8 +4,8 @@ import { registerAuthRoutes } from './auth.routes.js';
 // import { registerUserRoutes } from './user.routes.js';
 import uploadRoutes from './upload.routes.js';
 import { registerAddressRoutes } from './address.routes.js';
-// import { registerPaymentRoutes } from './payment.routes.js';
-// import { registerNotificationRoutes } from './notification.routes.js';
+import { registerPaymentRoutes } from './payment.routes.js';
+import { registerNotificationRoutes } from './notification.routes.js';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Health check endpoint
@@ -22,8 +22,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerAuthRoutes(app);
   // registerUserRoutes(app);
   registerAddressRoutes(app);
-  // registerPaymentRoutes(app);
-  // registerNotificationRoutes(app);
+  registerPaymentRoutes(app);
+  registerNotificationRoutes(app);
 
   // Register upload routes
   app.use('/api/upload', uploadRoutes);
