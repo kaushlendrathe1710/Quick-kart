@@ -15,6 +15,13 @@
       "when": 1762166232920,
       "tag": "0001_thick_ultimates",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1762246574632,
+      "tag": "0002_magenta_the_santerians",
+      "breakpoints": true
     }
   ]
 }
