@@ -3,24 +3,25 @@ import { createApp } from './app';
 import { registerRoutes } from './routes/index';
 import { setupVite, serveStatic, log } from './vite';
 import { initDatabase } from '@server/db/connect';
+import { seedDatabase } from '@server/db/seed';
 // sessionStore is exported from services when needed
 
 // Validate required environment variables
 const requiredEnvVars = [
-'DATABASE_URL',
-'SESSION_SECRET',
-'JWT_SECRET',
-'JWT_EXPIRY',
-'SMTP_HOST',
-'SMTP_PORT',
-'SMTP_SECURE',
-'SMTP_USER',
-'SMTP_PASS',
-'EMAIL_FROM',
-'AWS_ACCESS_KEY_ID',
-'AWS_SECRET_ACCESS_KEY',
-'AWS_BUCKET_REGION',
-'AWS_BUCKET_NAME',
+  'DATABASE_URL',
+  'SESSION_SECRET',
+  'JWT_SECRET',
+  'JWT_EXPIRY',
+  'SMTP_HOST',
+  'SMTP_PORT',
+  'SMTP_SECURE',
+  'SMTP_USER',
+  'SMTP_PASS',
+  'EMAIL_FROM',
+  'AWS_ACCESS_KEY_ID',
+  'AWS_SECRET_ACCESS_KEY',
+  'AWS_BUCKET_REGION',
+  'AWS_BUCKET_NAME',
 ];
 
 for (const envVar of requiredEnvVars) {
@@ -44,6 +45,9 @@ const app = createApp();
 
     // Initialize database
     await initDatabase();
+
+    // Seed database with dummy data (only if empty)
+    await seedDatabase();
 
     const server = await registerRoutes(app);
 
