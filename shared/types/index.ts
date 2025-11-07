@@ -7,4 +7,5 @@ export * from './payment.types';
 export * from './notification.types';
 export * from './category.types';
 export * from './product.types';
+export * from './cart.types';
 export * from './order.types';

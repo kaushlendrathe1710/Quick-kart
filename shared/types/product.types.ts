@@ -22,5 +22,40 @@ export const createProductSchema = z.object({
 
 export const updateProductSchema = createProductSchema.partial();
 
+// Product listing and filtering schemas
+export const listProductsSchema = z.object({
+  // Filters
+  category: z.coerce.number().int().positive().optional(),
+  minPrice: z.coerce.number().min(0).optional(),
+  maxPrice: z.coerce.number().min(0).optional(),
+  discount: z.coerce.number().min(0).max(100).optional(),
+  inStock: z
+    .string()
+    .transform((val) => val === 'true')
+    .optional(),
+  rating: z.coerce.number().min(0).max(5).optional(),
+  search: z.string().optional(),
+  // Pagination
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().min(1).max(100).default(20),
+  // Sorting
+  sortBy: z.enum(['price', 'rating', 'createdAt', 'name']).optional(),
+  sortOrder: z.enum(['asc', 'desc']).default('desc'),
+});
+
 export type CreateProductInput = z.infer<typeof createProductSchema>;
 export type UpdateProductInput = z.infer<typeof updateProductSchema>;
+export type ListProductsInput = z.infer<typeof listProductsSchema>;
+
+// Paginated response type
+export interface PaginatedProductsResponse {
+  products: Product[];
+  pagination: {
+    page: number;
+    limit: number;
+    totalCount: number;
+    totalPages: number;
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+  };
+}
