@@ -67,79 +67,10 @@ export const sellerInfo = pgTable('seller_info', {
   updatedAt: timestamp('updated_at').defaultNow(),
 });
 
-/**
- * Delivery Partner Documents table
- * Stores uploaded documents for delivery partners
- */
-export const deliveryPartnerDocuments = pgTable('delivery_partner_documents', {
-  id: serial('id').primaryKey(),
-  userId: integer('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' })
-    .unique(),
-  aadharCard: text('aadhar_card'), // Image URL
-  panCard: text('pan_card'), // Image URL
-  drivingLicense: text('driving_license'), // Image URL
-  vehicleRegistration: text('vehicle_registration'), // Image URL
-  insurance: text('insurance'), // Image URL
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
-});
-
-/**
- * Delivery Partner Vehicle Info table
- * Stores vehicle details for delivery partners
- */
-export const deliveryPartnerVehicleInfo = pgTable('delivery_partner_vehicle_info', {
-  id: serial('id').primaryKey(),
-  userId: integer('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' })
-    .unique(),
-  vehicleType: varchar('vehicle_type', { length: 50 }),
-  brand: varchar('brand', { length: 50 }),
-  model: varchar('model', { length: 50 }),
-  registrationNumber: varchar('registration_number', { length: 20 }),
-  color: varchar('color', { length: 30 }),
-  year: integer('year'),
-  fuel: varchar('fuel', { length: 20 }), // 'petrol' | 'diesel' | 'electric' | 'cng'
-  insuranceExpiry: timestamp('insurance_expiry'),
-  pucCertificateExpiry: timestamp('puc_certificate_expiry'),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
-});
-
-/**
- * Delivery Partner Payment Info table
- * Stores bank account details for delivery partners
- */
-export const deliveryPartnerPaymentInfo = pgTable('delivery_partner_payment_info', {
-  id: serial('id').primaryKey(),
-  userId: integer('user_id')
-    .notNull()
-    .references(() => users.id, { onDelete: 'cascade' })
-    .unique(),
-  accountHolderName: text('account_holder_name'),
-  accountNumber: varchar('account_number', { length: 20 }),
-  ifscCode: varchar('ifsc_code', { length: 11 }),
-  bankName: text('bank_name'),
-  branchName: text('branch_name'),
-  accountType: varchar('account_type', { length: 20 }), // 'savings' | 'current'
-  upiId: varchar('upi_id', { length: 100 }),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
-});
-
 export type UserPaymentMethod = typeof userPaymentMethods.$inferSelect;
 export type InsertUserPaymentMethod = typeof userPaymentMethods.$inferInsert;
 export type SellerInfo = typeof sellerInfo.$inferSelect;
 export type InsertSellerInfo = typeof sellerInfo.$inferInsert;
-export type DeliveryPartnerDocuments = typeof deliveryPartnerDocuments.$inferSelect;
-export type InsertDeliveryPartnerDocuments = typeof deliveryPartnerDocuments.$inferInsert;
-export type DeliveryPartnerVehicleInfo = typeof deliveryPartnerVehicleInfo.$inferSelect;
-export type InsertDeliveryPartnerVehicleInfo = typeof deliveryPartnerVehicleInfo.$inferInsert;
-export type DeliveryPartnerPaymentInfo = typeof deliveryPartnerPaymentInfo.$inferSelect;
-export type InsertDeliveryPartnerPaymentInfo = typeof deliveryPartnerPaymentInfo.$inferInsert;
 
 // this is not used explicitly in the current codebase, but used via express-session
 export const session = pgTable(
