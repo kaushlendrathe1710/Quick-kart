@@ -5,29 +5,8 @@
     {
       "idx": 0,
       "version": "7",
-      "when": 1762163191845,
-      "tag": "0000_optimal_boom_boom",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "7",
-      "when": 1762166232920,
-      "tag": "0001_thick_ultimates",
-      "breakpoints": true
-    },
-    {
-      "idx": 2,
-      "version": "7",
-      "when": 1762246574632,
-      "tag": "0002_magenta_the_santerians",
-      "breakpoints": true
-    },
-    {
-      "idx": 3,
-      "version": "7",
-      "when": 1762423469150,
-      "tag": "0003_sticky_franklin_richards",
+      "when": 1762861866378,
+      "tag": "0000_numerous_lockheed",
       "breakpoints": true
     }
   ]

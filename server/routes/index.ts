@@ -11,6 +11,15 @@ import { registerCartRoutes } from './cart.routes.js';
 import { registerOrderRoutes } from './order.routes.js';
 import { registerCategoryRoutes } from './category.routes.js';
 
+// Delivery Partner Routes
+import { registerDeliveryPartnerDocumentsRoutes } from './deliveryPartnerDocuments.routes.js';
+import { registerDeliveryPartnerVehicleRoutes } from './deliveryPartnerVehicle.routes.js';
+import { registerDeliveryPartnerBankRoutes } from './deliveryPartnerBank.routes.js';
+import { registerDeliveryRoutes } from './delivery.routes.js';
+import { registerDeliveryRatingRoutes } from './deliveryRating.routes.js';
+import { registerWalletRoutes } from './wallet.routes.js';
+import { registerTicketRoutes } from './ticket.routes.js';
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Health check endpoint
   app.get('/', (req, res) => {
@@ -32,6 +41,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerProductRoutes(app);
   registerCartRoutes(app);
   registerOrderRoutes(app);
+
+  // Register Delivery Partner routes
+  registerDeliveryPartnerDocumentsRoutes(app);
+  registerDeliveryPartnerVehicleRoutes(app);
+  registerDeliveryPartnerBankRoutes(app);
+  registerDeliveryRoutes(app);
+  registerDeliveryRatingRoutes(app);
+  registerWalletRoutes(app);
+  registerTicketRoutes(app);
 
   // Register upload routes
   app.use('/api/upload', uploadRoutes);

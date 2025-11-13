@@ -1,6 +1,7 @@
 import multer from 'multer';
 import path from 'path';
 import { Request, Response, NextFunction } from 'express';
+import fs from 'fs';
 
 // Configure multer for video uploads
 export const videoUpload = multer({
@@ -67,6 +68,35 @@ export const profileImageUpload = multer({
       cb(null, true);
     } else {
       cb(null, false);
+    }
+  },
+});
+
+// Configure multer for delivery partner documents
+export const documentUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      const uploadPath = path.join(process.cwd(), 'uploads', 'documents');
+
+      // Ensure the directory exists
+      fs.mkdirSync(uploadPath, { recursive: true });
+
+      cb(null, uploadPath);
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+      cb(null, 'document-' + uniqueSuffix + path.extname(file.originalname));
+    },
+  }),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit for documents
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedMimes = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'];
+    if (allowedMimes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Only JPG, PNG, and PDF are allowed.'));
     }
   },
 });
