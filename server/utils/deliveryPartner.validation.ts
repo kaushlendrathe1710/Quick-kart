@@ -214,14 +214,6 @@ export const updateDeliveryRatingSchema = z.object({
   }),
 });
 
-/**
- * Wallet Validation Schemas
- */
-export const createWalletSchema = z.object({
-  body: z.object({
-    deliveryPartnerId: z.number().min(1),
-  }),
-});
 
 /**
  * Payout Validation Schemas
