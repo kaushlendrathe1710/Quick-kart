@@ -48,6 +48,9 @@ export async function createAddress(userId: number, data: CreateAddressInput): P
     .values({
       userId,
       ...data,
+      // Convert numbers to strings for decimal fields
+      latitude: data.latitude !== undefined ? String(data.latitude) : undefined,
+      longitude: data.longitude !== undefined ? String(data.longitude) : undefined,
     })
     .returning();
 
@@ -71,6 +74,9 @@ export async function updateAddress(
     .update(addresses)
     .set({
       ...data,
+      // Convert numbers to strings for decimal fields
+      latitude: data.latitude !== undefined ? String(data.latitude) : undefined,
+      longitude: data.longitude !== undefined ? String(data.longitude) : undefined,
       updatedAt: new Date(),
     })
     .where(and(eq(addresses.id, addressId), eq(addresses.userId, userId)))

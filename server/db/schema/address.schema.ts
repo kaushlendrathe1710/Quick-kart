@@ -1,4 +1,13 @@
-import { pgTable, text, serial, timestamp, varchar, integer, boolean } from 'drizzle-orm/pg-core';
+import {
+  pgTable,
+  text,
+  decimal,
+  serial,
+  timestamp,
+  varchar,
+  integer,
+  boolean,
+} from 'drizzle-orm/pg-core';
 import { users } from './user.schema';
 
 /**
@@ -19,6 +28,8 @@ export const addresses = pgTable('addresses', {
   country: varchar('country', { length: 100 }).notNull().default('India'),
   landmark: text('landmark'),
   contactNumber: varchar('contact_number', { length: 15 }),
+  latitude: decimal('latitude', { precision: 10, scale: 8 }),
+  longitude: decimal('longitude', { precision: 11, scale: 8 }),
   isDefault: boolean('is_default').default(false),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),

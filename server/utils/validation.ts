@@ -76,6 +76,8 @@ export const createAddressSchema = z.object({
     .string()
     .regex(/^\+?[1-9]\d{1,14}$/, 'Invalid contact number')
     .optional(),
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional(),
   isDefault: z.boolean().optional(),
 });
 

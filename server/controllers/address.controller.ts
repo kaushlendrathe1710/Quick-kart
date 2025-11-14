@@ -108,6 +108,7 @@ export class AddressController {
       }
 
       const data = createAddressSchema.parse(req.body);
+      console.log("Creating address with data:", data);
 
       const newAddress = await createAddress(userId, data);
 

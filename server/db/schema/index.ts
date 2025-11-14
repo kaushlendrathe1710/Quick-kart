@@ -16,6 +16,7 @@ export * from './deliveryPartnerVehicle.schema';
 export * from './deliveryPartnerBank.schema';
 export * from './delivery.schema';
 export * from './deliveryRating.schema';
+export * from './deliveryPartnerLocation.schema';
 export * from './wallet.schema';
 export * from './walletTransaction.schema';
 export * from './payout.schema';

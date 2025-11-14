@@ -1,6 +1,8 @@
 export { userService } from './user.service';
+export * from './user.service';
 export * from './otp.service';
 export * from './address.service';
+export * from './deliveryLocation.service';
 export * from './category.service';
 export * from './product.service';
 export * from './cart.service';
