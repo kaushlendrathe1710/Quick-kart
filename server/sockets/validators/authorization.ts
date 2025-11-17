@@ -131,7 +131,7 @@ export async function getStoreIdsForOrder(orderId: number): Promise<number[]> {
       .innerJoin(products, eq(orderItems.productId, products.id))
       .where(eq(orderItems.orderId, orderId));
 
-    return result.map((r) => r.sellerId);
+    return result.map((r) => r.sellerId).filter((id): id is number => id !== null);
   } catch (error) {
     console.error('Error fetching store IDs for order:', error);
     return [];

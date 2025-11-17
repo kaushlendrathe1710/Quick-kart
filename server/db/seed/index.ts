@@ -51,11 +51,25 @@ export async function seedDatabase() {
 
     // 3. Seed Products
     console.log('🛍️  Seeding products...');
-    const productsToInsert = dummyProducts.map((product) => ({
-      ...product,
-      sellerId,
-      categoryId: insertedCategories[product.categoryId - 1].id,
-    }));
+    const productsToInsert = dummyProducts.map((product) => {
+      const categoryIndex = product.categoryId - 1;
+      const { discount, specifications, images, ...productWithoutDiscountAndSpecs } = product;
+      const rawPrice =
+        typeof product.price === 'string' ? parseFloat(product.price) : Number(product.price);
+      // schema expects integer price; round to nearest integer
+      const price = Math.round(rawPrice);
+
+      return {
+        ...productWithoutDiscountAndSpecs,
+        price,
+        specifications: specifications ? JSON.stringify(specifications) : null,
+        images: images ? JSON.stringify(images) : null,
+        imageUrl: images && images.length > 0 ? images[0] : null,
+        sellerId,
+        categoryId: insertedCategories[categoryIndex].id,
+        category: insertedCategories[categoryIndex].name,
+      };
+    });
 
     const insertedProducts = await db.insert(products).values(productsToInsert).returning();
     console.log(`✅ Inserted ${insertedProducts.length} products`);

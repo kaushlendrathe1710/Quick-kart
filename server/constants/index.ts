@@ -19,8 +19,12 @@ export const JWT_CONFIG = {
 // Pagination
 export const PAGINATION = {
   DEFAULT_LIMIT: 20,
-  MAX_LIMIT: 100,
+  UPPER_LIMIT: 100,
+  MAX_LIMIT: 100, // Alias for backward compatibility
 } as const;
+
+export const PAGINATION_DEFAULT_LIMIT = PAGINATION.DEFAULT_LIMIT;
+export const PAGINATION_UPPER_LIMIT = PAGINATION.UPPER_LIMIT;
 
 // User Roles (re-export for server-side convenience)
 export { userRole } from '@shared/constants';
@@ -43,4 +47,43 @@ export const DELIVERY_PARTNER_S3_CONFIG = {
   VEHICLE_FOLDER: 'vehicles',
   ALLOWED_MIME_TYPES: ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf'],
   MAX_FILE_SIZE: 5 * 1024 * 1024, // 5MB
+} as const;
+
+// Product Media Upload Configuration
+export const PRODUCT_MEDIA_CONFIG = {
+  // Image configuration
+  IMAGE: {
+    ALLOWED_MIME_TYPES: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
+    MAX_FILE_SIZE: 5 * 1024 * 1024, // 5MB per image
+    MAX_FILES: 10, // Maximum 10 images per product
+  },
+  // Video configuration
+  VIDEO: {
+    ALLOWED_MIME_TYPES: ['video/mp4', 'video/webm', 'video/quicktime'],
+    MAX_FILE_SIZE: 50 * 1024 * 1024, // 50MB per video
+    MAX_FILES: 3, // Maximum 3 videos per product
+  },
+  // Total media limit
+  MAX_TOTAL_MEDIA: 13, // 10 images + 3 videos
+} as const;
+
+// Banner/Promotional Media Configuration
+export const BANNER_MEDIA_CONFIG = {
+  ALLOWED_MIME_TYPES: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
+  MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB for banners (higher quality)
+  MAX_FILES: 1, // One banner at a time
+} as const;
+
+// Review Media Configuration
+export const REVIEW_MEDIA_CONFIG = {
+  ALLOWED_MIME_TYPES: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
+  MAX_FILE_SIZE: 3 * 1024 * 1024, // 3MB per review image
+  MAX_FILES: 5, // Maximum 5 images per review
+} as const;
+
+// Profile/Avatar Configuration
+export const PROFILE_MEDIA_CONFIG = {
+  ALLOWED_MIME_TYPES: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
+  MAX_FILE_SIZE: 2 * 1024 * 1024, // 2MB for profile images
+  MAX_FILES: 1,
 } as const;

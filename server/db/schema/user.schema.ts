@@ -23,6 +23,8 @@ export const users = pgTable('users', {
   contactNumber: varchar('contact_number', { length: 15 }),
   avatar: text('avatar'),
   isApproved: boolean('is_approved').default(false),
+  rejected: boolean('rejected').default(false),
+  rejectionReason: text('rejection_reason'),
   role: userRoleEnum('role').default('user').notNull(),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
@@ -63,6 +65,19 @@ export const sellerInfo = pgTable('seller_info', {
   businessName: text('business_name'),
   businessAddress: text('business_address'),
   gstNumber: varchar('gst_number', { length: 15 }),
+  panNumber: varchar('pan_number', { length: 10 }),
+  // Bank details
+  bankName: text('bank_name'),
+  bankState: varchar('bank_state', { length: 100 }),
+  bankCity: varchar('bank_city', { length: 100 }),
+  bankPincode: varchar('bank_pincode', { length: 10 }),
+  accountNumber: varchar('account_number', { length: 50 }),
+  ifscCode: varchar('ifsc_code', { length: 11 }),
+  // Approval tracking
+  approvedAt: timestamp('approved_at'),
+  approvedBy: integer('approved_by').references(() => users.id),
+  rejectedAt: timestamp('rejected_at'),
+  rejectedBy: integer('rejected_by').references(() => users.id),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });

@@ -39,15 +39,10 @@ export async function listProducts(filters: ListProductsInput): Promise<Paginate
 
   // Price range filter
   if (minPrice !== undefined) {
-    conditions.push(gte(products.price, minPrice.toString()));
+    conditions.push(gte(products.price, minPrice));
   }
   if (maxPrice !== undefined) {
-    conditions.push(lte(products.price, maxPrice.toString()));
-  }
-
-  // Discount filter (minimum discount percentage)
-  if (discount !== undefined) {
-    conditions.push(gte(products.discount, discount.toString()));
+    conditions.push(lte(products.price, maxPrice));
   }
 
   // Stock availability filter

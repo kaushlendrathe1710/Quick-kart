@@ -25,7 +25,7 @@ export async function getDeliveryByOrderId(orderId: number): Promise<Delivery | 
 export async function getDeliveriesByPartnerId(
   deliveryPartnerId: number,
   options?: { limit?: number; offset?: number }
-): Promise<Delivery[]> {
+): Promise<{ data: Delivery[]; total: number }> {
   const query = db
     .select()
     .from(deliveries)
@@ -39,7 +39,18 @@ export async function getDeliveriesByPartnerId(
     query.offset(options.offset);
   }
 
-  return await query;
+  const data = await query;
+
+  // Get total count
+  const totalResult = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(deliveries)
+    .where(eq(deliveries.deliveryPartnerId, deliveryPartnerId));
+
+  return {
+    data,
+    total: Number(totalResult[0]?.count || 0),
+  };
 }
 
 /**

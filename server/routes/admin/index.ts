@@ -1,0 +1,13 @@
+export { registerAdminDeliveryRoutes } from './delivery.routes';
+export { registerAdminTicketRoutes } from './ticket.routes';
+export { registerAdminWalletRoutes } from './wallet.routes';
+export { registerAdminSellerRoutes } from './seller.routes';
+export { registerAdminDashboardRoutes } from './dashboard.routes';
+export { registerAdminProductRoutes } from './product.routes';
+export { registerAdminCategoryRoutes } from './category.routes';
+export { registerAdminDeliveryPartnerRoutes } from './deliveryPartner.routes';
+export { registerAdminUserRoutes } from './user.routes';
+export { registerAdminOrderRoutes } from './order.routes';
+export { registerAdminBannerRoutes } from './banner.routes';
+export { registerAdminGiftCardRoutes } from './giftCard.routes';
+export { registerAdminRewardRoutes } from './reward.routes';

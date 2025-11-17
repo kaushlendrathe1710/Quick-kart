@@ -46,6 +46,7 @@ export const orders = pgTable('orders', {
   userId: integer('user_id')
     .notNull()
     .references(() => users.id, { onDelete: 'cascade' }),
+  sellerId: integer('seller_id').references(() => users.id), // Primary seller for the order
   addressId: integer('address_id')
     .notNull()
     .references(() => addresses.id),
@@ -53,9 +54,15 @@ export const orders = pgTable('orders', {
   paymentStatus: paymentStatusEnum('payment_status').notNull().default('pending'),
   totalAmount: decimal('total_amount', { precision: 10, scale: 2 }).notNull(),
   discount: decimal('discount', { precision: 10, scale: 2 }).default('0'),
+  shippingCharges: decimal('shipping_charges', { precision: 10, scale: 2 }).default('0'),
+  taxAmount: decimal('tax_amount', { precision: 10, scale: 2 }).default('0'),
   finalAmount: decimal('final_amount', { precision: 10, scale: 2 }).notNull(),
+
+  // Shipping information
   deliveryPartnerId: integer('delivery_partner_id').references(() => users.id),
   trackingNumber: text('tracking_number'),
+  courierName: text('courier_name'),
+
   notes: text('notes'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
@@ -73,9 +80,11 @@ export const orderItems = pgTable('order_items', {
   productId: integer('product_id')
     .notNull()
     .references(() => products.id),
+  sellerId: integer('seller_id').references(() => users.id), // Track seller for each item
   quantity: integer('quantity').notNull(),
   price: decimal('price', { precision: 10, scale: 2 }).notNull(),
   discount: decimal('discount', { precision: 10, scale: 2 }).default('0'),
+  taxAmount: decimal('tax_amount', { precision: 10, scale: 2 }).default('0'),
   finalPrice: decimal('final_price', { precision: 10, scale: 2 }).notNull(),
   createdAt: timestamp('created_at').defaultNow(),
 });
