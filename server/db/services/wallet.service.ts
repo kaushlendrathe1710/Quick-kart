@@ -214,6 +214,34 @@ export async function getPendingPayouts(options?: {
 }
 
 /**
+ * Get all payouts with optional status filter (for admin)
+ */
+export async function getAllPayouts(options?: {
+  limit?: number;
+  offset?: number;
+  status?: string;
+}): Promise<Payout[]> {
+  const baseQuery = db.select().from(payouts);
+
+  let query: any = baseQuery;
+
+  if (options?.status) {
+    query = query.where(eq(payouts.status, options.status as any));
+  }
+
+  query = query.orderBy(desc(payouts.appliedAt));
+
+  if (options?.limit) {
+    query = query.limit(options.limit);
+  }
+  if (options?.offset) {
+    query = query.offset(options.offset);
+  }
+
+  return await query;
+}
+
+/**
  * Create payout (apply for payout)
  */
 export async function createPayout(data: NewPayout): Promise<Payout> {
@@ -301,6 +329,7 @@ export const walletService = {
   getPayoutById,
   getPayoutsByWalletId,
   getPendingPayouts,
+  getAllPayouts,
   createPayout,
   updatePayoutStatus,
   getPayoutStats,

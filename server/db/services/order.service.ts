@@ -77,13 +77,10 @@ export async function createOrderFromCart(
       }
 
       // Calculate item total
-      const itemPrice = parseFloat(product.price);
-      const itemDiscount = parseFloat(product.discount || '0');
+      const itemPrice = product.price;
       const itemTotal = itemPrice * cartItem.quantity;
-      const itemDiscountAmount = (itemTotal * itemDiscount) / 100;
 
       totalAmount += itemTotal;
-      totalDiscount += itemDiscountAmount;
     }
 
     const finalAmount = totalAmount - totalDiscount;
@@ -109,11 +106,8 @@ export async function createOrderFromCart(
     for (const item of items) {
       const { cartItem, product } = item;
 
-      const itemPrice = parseFloat(product.price);
-      const itemDiscount = parseFloat(product.discount || '0');
+      const itemPrice = product.price;
       const itemTotal = itemPrice * cartItem.quantity;
-      const itemDiscountAmount = (itemTotal * itemDiscount) / 100;
-      const itemFinalPrice = itemTotal - itemDiscountAmount;
 
       // Create order item
       const [orderItem] = await tx
@@ -122,9 +116,9 @@ export async function createOrderFromCart(
           orderId: newOrder.id,
           productId: product.id,
           quantity: cartItem.quantity,
-          price: product.price,
-          discount: product.discount || '0',
-          finalPrice: itemFinalPrice.toFixed(2),
+          price: product.price.toString(),
+          discount: '0',
+          finalPrice: itemTotal.toFixed(2),
         })
         .returning();
 

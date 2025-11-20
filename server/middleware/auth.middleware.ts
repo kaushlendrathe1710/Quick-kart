@@ -14,6 +14,16 @@ export const authenticate = async (
   res: Response,
   next: NextFunction
 ) => {
+  // Debug logging in development
+  if (process.env.NODE_ENV === 'development') {
+    console.log('🔐 Auth check:', {
+      path: req.path,
+      hasSession: !!req.session?.userId,
+      sessionUserId: req.session?.userId,
+      hasAuthHeader: !!req.headers.authorization,
+    });
+  }
+
   // First check if user is authenticated via session
   if (req.session?.userId) {
     const user = await userService.getUserById(req.session?.userId);

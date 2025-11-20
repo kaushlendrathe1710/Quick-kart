@@ -25,27 +25,13 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          vendor: [
-            'react',
-            'react-dom',
-            'wouter',
-            'date-fns',
-            'axios',
-            '@aws-sdk/client-s3',
-          ],
+          vendor: ['react', 'react-dom', 'wouter', 'date-fns', 'axios', '@aws-sdk/client-s3'],
         },
       },
     },
   },
   optimizeDeps: {
-    include: [
-      'react',
-      'react-dom',
-      'wouter',
-      'date-fns',
-      'axios',
-      '@aws-sdk/client-s3',
-    ],
+    include: ['react', 'react-dom', 'wouter', 'date-fns', 'axios', '@aws-sdk/client-s3'],
   },
   server: {
     fs: {

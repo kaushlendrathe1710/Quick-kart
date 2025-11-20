@@ -7,7 +7,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
   avatar: true,
   role: true,
-  isapproved: true,
+  isApproved: true,
 });
 
 // TypeScript types

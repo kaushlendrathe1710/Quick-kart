@@ -23,8 +23,11 @@ export async function initDatabase() {
 `);
     return true;
   } catch (error) {
-    console.error(`❌ Database connection failed!
-Error details:`, error);
+    console.error(
+      `❌ Database connection failed!
+Error details:`,
+      error
+    );
     console.log('=============================================\n');
     throw error;
   }

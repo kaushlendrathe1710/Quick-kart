@@ -1,6 +1,7 @@
 // Validation utilities
 import { z } from 'zod';
 import { userRole } from '@shared/constants';
+import { PAGINATION_DEFAULT_LIMIT, PAGINATION_UPPER_LIMIT } from '@server/constants';
 
 export function validateEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -19,7 +20,7 @@ export function sanitizeFilename(filename: string): string {
 
 // Common validation schemas
 export const paginationSchema = z.object({
-  limit: z.coerce.number().min(1).max(100).default(20),
+  limit: z.coerce.number().min(1).max(PAGINATION_UPPER_LIMIT).default(PAGINATION_DEFAULT_LIMIT),
   offset: z.coerce.number().min(0).default(0),
 });
 
@@ -76,6 +77,8 @@ export const createAddressSchema = z.object({
     .string()
     .regex(/^\+?[1-9]\d{1,14}$/, 'Invalid contact number')
     .optional(),
+  latitude: z.number().min(-90).max(90).optional(),
+  longitude: z.number().min(-180).max(180).optional(),
   isDefault: z.boolean().optional(),
 });
 

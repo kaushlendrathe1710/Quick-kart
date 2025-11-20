@@ -2,6 +2,61 @@ import multer from 'multer';
 import path from 'path';
 import { Request, Response, NextFunction } from 'express';
 import fs from 'fs';
+import { PRODUCT_MEDIA_CONFIG } from '../constants';
+
+// Configure multer for product image uploads
+export const productImageUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      const uploadPath = path.join(process.cwd(), 'uploads', 'products', 'images');
+      fs.mkdirSync(uploadPath, { recursive: true });
+      cb(null, uploadPath);
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+      cb(null, 'product-img-' + uniqueSuffix + path.extname(file.originalname));
+    },
+  }),
+  limits: {
+    fileSize: PRODUCT_MEDIA_CONFIG.IMAGE.MAX_FILE_SIZE,
+    files: PRODUCT_MEDIA_CONFIG.IMAGE.MAX_FILES,
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = PRODUCT_MEDIA_CONFIG.IMAGE.ALLOWED_MIME_TYPES as readonly string[];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error(`Invalid file type. Allowed types: ${allowedTypes.join(', ')}`));
+    }
+  },
+});
+
+// Configure multer for product video uploads
+export const productVideoUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      const uploadPath = path.join(process.cwd(), 'uploads', 'products', 'videos');
+      fs.mkdirSync(uploadPath, { recursive: true });
+      cb(null, uploadPath);
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+      cb(null, 'product-video-' + uniqueSuffix + path.extname(file.originalname));
+    },
+  }),
+  limits: {
+    fileSize: PRODUCT_MEDIA_CONFIG.VIDEO.MAX_FILE_SIZE,
+    files: PRODUCT_MEDIA_CONFIG.VIDEO.MAX_FILES,
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = PRODUCT_MEDIA_CONFIG.VIDEO.ALLOWED_MIME_TYPES as readonly string[];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error(`Invalid file type. Allowed types: ${allowedTypes.join(', ')}`));
+    }
+  },
+});
 
 // Configure multer for video uploads
 export const videoUpload = multer({

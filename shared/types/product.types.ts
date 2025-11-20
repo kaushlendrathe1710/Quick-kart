@@ -26,6 +26,7 @@ export const updateProductSchema = createProductSchema.partial();
 export const listProductsSchema = z.object({
   // Filters
   category: z.coerce.number().int().positive().optional(),
+  subcategory: z.coerce.number().int().positive().optional(),
   minPrice: z.coerce.number().min(0).optional(),
   maxPrice: z.coerce.number().min(0).optional(),
   discount: z.coerce.number().min(0).max(100).optional(),

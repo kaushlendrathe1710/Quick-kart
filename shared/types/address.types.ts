@@ -18,6 +18,32 @@ export const createAddressSchema = z.object({
     .string()
     .regex(/^\+?[1-9]\d{1,14}$/)
     .optional(),
+  latitude: z
+    .number()
+    .min(-90)
+    .max(90)
+    .optional()
+    .or(
+      z
+        .string()
+        .regex(/^-?\d+(\.\d+)?$/)
+        .transform(Number)
+        .pipe(z.number().min(-90).max(90))
+        .optional()
+    ),
+  longitude: z
+    .number()
+    .min(-180)
+    .max(180)
+    .optional()
+    .or(
+      z
+        .string()
+        .regex(/^-?\d+(\.\d+)?$/)
+        .transform(Number)
+        .pipe(z.number().min(-180).max(180))
+        .optional()
+    ),
   isDefault: z.boolean().optional(),
 });
 

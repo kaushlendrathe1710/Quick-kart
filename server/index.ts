@@ -4,6 +4,7 @@ import { registerRoutes } from './routes/index';
 import { setupVite, serveStatic, log } from './vite';
 import { initDatabase } from '@server/db/connect';
 import { seedDatabase } from '@server/db/seed';
+import { initializeSocketIO } from './sockets';
 // sessionStore is exported from services when needed
 
 // Validate required environment variables
@@ -50,6 +51,12 @@ const app = createApp();
     await seedDatabase();
 
     const server = await registerRoutes(app);
+
+    // Initialize Socket.IO for real-time features
+    const io = initializeSocketIO(server);
+
+    // Make io available globally if needed by other modules
+    (app as any).io = io;
 
     // importantly only setup vite in development and after
     // setting up all the other routes so the catch-all route

@@ -1,5 +1,5 @@
 import { db } from '@server/db/connect';
-import { categories } from '@server/db/schema';
+import { categories, subcategories } from '@server/db/schema';
 import { eq, like, sql, desc } from 'drizzle-orm';
 import { ListCategoriesInput, PaginatedCategoriesResponse, Category } from '@shared/types';
 
@@ -83,4 +83,167 @@ export async function getCategoryById(categoryId: number): Promise<Category | un
  */
 export async function getAllActiveCategories(): Promise<Category[]> {
   return await db.select().from(categories).where(eq(categories.isActive, true));
+}
+
+/**
+ * Create a new category (Admin only)
+ */
+export async function createCategory(data: {
+  name: string;
+  description?: string;
+  icon?: string;
+  isActive?: boolean;
+}): Promise<Category> {
+  // Generate slug from name
+  const slug = data.name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+
+  const result = await db
+    .insert(categories)
+    .values({
+      ...data,
+      slug,
+      image: data.icon, // Map icon to image field
+    })
+    .returning();
+  return result[0];
+}
+
+/**
+ * Update a category (Admin only)
+ */
+export async function updateCategory(
+  categoryId: number,
+  data: {
+    name?: string;
+    description?: string;
+    icon?: string;
+    isActive?: boolean;
+  }
+): Promise<Category | undefined> {
+  const result = await db
+    .update(categories)
+    .set({
+      ...data,
+      updatedAt: new Date(),
+    })
+    .where(eq(categories.id, categoryId))
+    .returning();
+
+  return result[0];
+}
+
+/**
+ * Delete a category (Admin only)
+ */
+export async function deleteCategory(categoryId: number): Promise<boolean> {
+  const result = await db.delete(categories).where(eq(categories.id, categoryId)).returning();
+  return result.length > 0;
+}
+
+/**
+ * Get all subcategories for a category
+ */
+export async function getSubcategoriesByCategoryId(categoryId: number) {
+  return await db
+    .select()
+    .from(subcategories)
+    .where(eq(subcategories.categoryId, categoryId))
+    .orderBy(subcategories.name);
+}
+
+/**
+ * Get all subcategories (admin view)
+ */
+export async function getAllSubcategories() {
+  return await db
+    .select({
+      id: subcategories.id,
+      name: subcategories.name,
+      slug: subcategories.slug,
+      image: subcategories.image,
+      description: subcategories.description,
+      categoryId: subcategories.categoryId,
+      categoryName: categories.name,
+      displayOrder: subcategories.displayOrder,
+      active: subcategories.active,
+      createdAt: subcategories.createdAt,
+    })
+    .from(subcategories)
+    .leftJoin(categories, eq(subcategories.categoryId, categories.id))
+    .orderBy(desc(subcategories.createdAt));
+}
+
+/**
+ * Create a new subcategory (Admin only)
+ */
+export async function createSubcategory(data: {
+  name: string;
+  categoryId: number;
+  description?: string;
+  image?: string;
+  active?: boolean;
+}) {
+  // Generate slug from name
+  const slug = data.name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
+
+  const result = await db
+    .insert(subcategories)
+    .values({
+      ...data,
+      slug,
+    })
+    .returning();
+  return result[0];
+}
+
+/**
+ * Update a subcategory (Admin only)
+ */
+export async function updateSubcategory(
+  subcategoryId: number,
+  data: {
+    name?: string;
+    categoryId?: number;
+    description?: string;
+    image?: string;
+    displayOrder?: number;
+    active?: boolean;
+  }
+) {
+  const updateData: any = { ...data };
+
+  // Generate new slug if name is being updated
+  if (data.name) {
+    updateData.slug = data.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/(^-|-$)/g, '');
+  }
+
+  updateData.updatedAt = new Date();
+
+  const result = await db
+    .update(subcategories)
+    .set(updateData)
+    .where(eq(subcategories.id, subcategoryId))
+    .returning();
+
+  return result[0];
+}
+
+/**
+ * Delete a subcategory (Admin only)
+ */
+export async function deleteSubcategory(subcategoryId: number): Promise<boolean> {
+  const result = await db
+    .delete(subcategories)
+    .where(eq(subcategories.id, subcategoryId))
+    .returning();
+  return result.length > 0;
 }

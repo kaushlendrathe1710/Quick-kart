@@ -14,6 +14,7 @@ import { ListProductsInput, PaginatedProductsResponse, Product } from '@shared/t
 export async function listProducts(filters: ListProductsInput): Promise<PaginatedProductsResponse> {
   const {
     category,
+    subcategory,
     minPrice,
     maxPrice,
     discount,
@@ -37,17 +38,17 @@ export async function listProducts(filters: ListProductsInput): Promise<Paginate
     conditions.push(eq(products.categoryId, category));
   }
 
-  // Price range filter
-  if (minPrice !== undefined) {
-    conditions.push(gte(products.price, minPrice.toString()));
-  }
-  if (maxPrice !== undefined) {
-    conditions.push(lte(products.price, maxPrice.toString()));
+  // Subcategory filter
+  if (subcategory) {
+    conditions.push(eq(products.subcategoryId, subcategory));
   }
 
-  // Discount filter (minimum discount percentage)
-  if (discount !== undefined) {
-    conditions.push(gte(products.discount, discount.toString()));
+  // Price range filter
+  if (minPrice !== undefined) {
+    conditions.push(gte(products.price, minPrice));
+  }
+  if (maxPrice !== undefined) {
+    conditions.push(lte(products.price, maxPrice));
   }
 
   // Stock availability filter

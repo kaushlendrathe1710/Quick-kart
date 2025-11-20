@@ -56,9 +56,9 @@ export async function getUserCart(userId: number): Promise<CartWithItems | null>
         id: products.id,
         name: products.name,
         price: products.price,
-        discount: products.discount,
         stock: products.stock,
-        images: products.images,
+        thumbnail: products.thumbnail,
+        imageUrls: products.imageUrls,
         categoryId: products.categoryId,
       },
     })
@@ -136,7 +136,7 @@ export async function addToCart(
       cartId,
       productId,
       quantity,
-      price: product[0].price,
+      price: product[0].price.toString(),
     });
   }
 

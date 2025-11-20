@@ -25,10 +25,10 @@ export interface CartItemWithProduct extends CartItem {
   product?: {
     id: number;
     name: string;
-    price: string;
-    discount: string | null;
+    price: number;
     stock: number;
-    images: string[] | null;
+    thumbnail: string | null;
+    imageUrls: string | null;
     categoryId: number;
   };
 }

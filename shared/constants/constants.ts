@@ -10,4 +10,3 @@ export const theme = {
   LIGHT: 'light',
   SYSTEM: 'system',
 } as const;
-
