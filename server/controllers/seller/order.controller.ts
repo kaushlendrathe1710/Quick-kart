@@ -32,7 +32,7 @@ export class SellerOrderController {
         limit,
         offset,
         with: {
-          user: {
+          buyer: {
             columns: {
               name: true,
               email: true,
@@ -94,7 +94,7 @@ export class SellerOrderController {
       const order = await db.query.orders.findFirst({
         where: and(eq(orders.id, orderId), eq(orders.sellerId, sellerId)),
         with: {
-          user: true,
+          buyer: true,
           address: true,
           orderItems: {
             where: eq(orderItems.sellerId, sellerId),
@@ -148,7 +148,7 @@ export class SellerOrderController {
       const order = await db.query.orders.findFirst({
         where: and(eq(orders.id, orderId), eq(orders.sellerId, sellerId)),
         with: {
-          user: true,
+          buyer: true,
           address: true,
           orderItems: {
             where: eq(orderItems.sellerId, sellerId),
@@ -192,9 +192,9 @@ export class SellerOrderController {
         sellerPANNumber: seller.sellerInfo.panNumber || undefined,
         sellerEmail: seller.email,
         sellerPhone: seller.contactNumber || '',
-        buyerName: order.user.name || '',
-        buyerEmail: order.user.email,
-        buyerPhone: order.user.contactNumber || '',
+        buyerName: order.buyer.name || '',
+        buyerEmail: order.buyer.email,
+        buyerPhone: order.buyer.contactNumber || '',
         buyerAddress: {
           street: order.address.addressLine,
           city: order.address.city,
@@ -255,7 +255,7 @@ export class SellerOrderController {
       const order = await db.query.orders.findFirst({
         where: and(eq(orders.id, orderId), eq(orders.sellerId, sellerId)),
         with: {
-          user: true,
+          buyer: true,
           address: true,
           orderItems: {
             where: eq(orderItems.sellerId, sellerId),
@@ -311,12 +311,12 @@ export class SellerOrderController {
           phone: seller.contactNumber || '',
         },
         delivery: {
-          name: order.user.name || '',
+          name: order.buyer.name || '',
           address: order.address.addressLine,
           city: order.address.city,
           state: order.address.state || '',
           pincode: order.address.postalCode,
-          phone: order.user.contactNumber || '',
+          phone: order.buyer.contactNumber || '',
         },
         package: {
           weight: order.orderItems[0]?.product?.weight

@@ -55,10 +55,11 @@ import { registerTicketRoutes } from './deliveryPartner/ticket.routes.js';
 import { registerCategoryRoutes } from './public/category.routes.js';
 import { registerProductRoutes } from './public/product.routes.js';
 import { registerPublicDeliveryRatingRoutes } from './public/deliveryRating.routes.js';
+import { registerSubcategoryRoutes } from './public/subcategory.routes.js';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Health check endpoint
-  app.get('/', (req, res) => {
+  app.get('/api/health', (req, res) => {
     res.status(200).json({
       success: true,
       message: 'Quick-kart API is running',
@@ -129,6 +130,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // PUBLIC ROUTES (No Authentication Required)
   // ============================================
   registerCategoryRoutes(app);
+  registerSubcategoryRoutes(app);
   registerProductRoutes(app);
   registerPublicDeliveryRatingRoutes(app);
 

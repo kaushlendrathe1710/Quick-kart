@@ -18,7 +18,7 @@ export function createApp() {
   const allowedOrigins = [
     process.env.VITE_CLIENT_URL!,
     process.env.VITE_AUTH_SERVER!,
-    process.env.VITE_VIDEOSTREAMPRO_URL!
+    process.env.VITE_VIDEOSTREAMPRO_URL!,
   ];
 
   app.use(
@@ -114,8 +114,7 @@ export function createApp() {
       cookie: {
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days for longer persistence
         secure: process.env.NODE_ENV === 'production',
-        // sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-        sameSite: 'none',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         path: '/',
         httpOnly: true, // Adds security by preventing client-side access to the cookie
       },

@@ -1,20 +1,20 @@
-import "dotenv/config";
-import nodemailer from "nodemailer";
+import 'dotenv/config';
+import nodemailer from 'nodemailer';
 
 // Create a transporter with environment variables
 const createTransporter = () => {
   // Log SMTP config for debugging (do not log passwords in production)
-  console.log("SMTP_HOST:", process.env.SMTP_HOST);
-  console.log("SMTP_PORT:", process.env.SMTP_PORT);
-  console.log("SMTP_SECURE:", process.env.SMTP_SECURE);
-  console.log("SMTP_USER:", process.env.SMTP_USER);
+  console.log('SMTP_HOST:', process.env.SMTP_HOST);
+  console.log('SMTP_PORT:', process.env.SMTP_PORT);
+  console.log('SMTP_SECURE:', process.env.SMTP_SECURE);
+  console.log('SMTP_USER:', process.env.SMTP_USER);
   // Do not log SMTP_PASS for security
 
   if (process.env.SMTP_HOST && process.env.SMTP_PORT) {
     return nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT),
-      secure: process.env.SMTP_SECURE === "true", // true for 465, false for other ports
+      secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
       auth:
         process.env.SMTP_USER && process.env.SMTP_PASS
           ? {
@@ -26,14 +26,14 @@ const createTransporter = () => {
   }
 
   // Otherwise fallback to a test account that we create if needed
-  console.log("No SMTP settings found, using test account");
+  console.log('No SMTP settings found, using test account');
   return nodemailer.createTransport({
-    host: "smtp.ethereal.email",
+    host: 'smtp.ethereal.email',
     port: 587,
     secure: false, // true for 465, false for other ports
     auth: {
-      user: "demo@ethereal.email", // this is a fake account for testing
-      pass: "demo123",
+      user: 'demo@ethereal.email', // this is a fake account for testing
+      pass: 'demo123',
     },
   });
 };
@@ -41,24 +41,24 @@ const createTransporter = () => {
 export async function sendOtpEmail(email: string, otp: string): Promise<void> {
   try {
     // If we're in development, log the OTP for easy testing
-    if (process.env.NODE_ENV !== "production") {
+    if (process.env.NODE_ENV !== 'production') {
       console.log(`[DEV MODE] The OTP for ${email} is: ${otp}`);
       return;
     }
 
     const transporter = createTransporter();
-    console.log("Created transporter, verifying connection...");
+    console.log('Created transporter, verifying connection...');
     try {
       await transporter.verify();
-      console.log("SMTP connection verified successfully.");
+      console.log('SMTP connection verified successfully.');
     } catch (verifyErr) {
-      console.error("SMTP connection verification failed:", verifyErr);
+      console.error('SMTP connection verification failed:', verifyErr);
     }
     // Prepare email content
     const mailOptions = {
       from: process.env.EMAIL_FROM || '"Quick-kart" <no-reply@quick-kart.com>',
       to: email,
-      subject: "Your verification code",
+      subject: 'Your verification code',
       text: `Your verification code is: ${otp}\n\nThis code will expire in 10 minutes.`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
@@ -80,12 +80,12 @@ export async function sendOtpEmail(email: string, otp: string): Promise<void> {
         </div>
       `,
     };
-    console.log("Prepared mailOptions:", mailOptions);
+    console.log('Prepared mailOptions:', mailOptions);
     // Send the email
     await transporter.sendMail(mailOptions);
     console.log(`OTP email sent to ${email}`);
   } catch (error) {
-    console.error("Failed to send OTP email:", error);
-    throw new Error("Failed to send email");
+    console.error('Failed to send OTP email:', error);
+    throw new Error('Failed to send email');
   }
 }

@@ -23,7 +23,9 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   addresses: many(addresses),
   paymentMethods: many(paymentMethods),
   notifications: many(notifications),
-  orders: many(orders),
+  ordersAsBuyer: many(orders, { relationName: 'buyer_orders' }),
+  ordersAsSeller: many(orders, { relationName: 'seller_orders' }),
+  ordersAsDeliveryPartner: many(orders, { relationName: 'delivery_partner_orders' }),
   products: many(products), // Products they sell (as seller)
   carts: many(carts),
   reviews: many(reviews), // Reviews they wrote
@@ -134,13 +136,15 @@ export const notificationsRelations = relations(notifications, ({ one }) => ({
 
 // Order relations
 export const ordersRelations = relations(orders, ({ one, many }) => ({
-  user: one(users, {
+  buyer: one(users, {
     fields: [orders.userId],
     references: [users.id],
+    relationName: 'buyer_orders',
   }),
   seller: one(users, {
     fields: [orders.sellerId],
     references: [users.id],
+    relationName: 'seller_orders',
   }),
   address: one(addresses, {
     fields: [orders.addressId],
@@ -149,6 +153,7 @@ export const ordersRelations = relations(orders, ({ one, many }) => ({
   deliveryPartner: one(users, {
     fields: [orders.deliveryPartnerId],
     references: [users.id],
+    relationName: 'delivery_partner_orders',
   }),
   delivery: one(deliveries, {
     fields: [orders.id],

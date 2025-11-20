@@ -15,11 +15,20 @@ import { z } from 'zod';
 // Validation schemas
 const updateProfileSchema = z.object({
   name: z.string().min(2).max(100).optional(),
-  contactNumber: z.string().regex(/^\d{10}$/).optional(),
+  contactNumber: z
+    .string()
+    .regex(/^\d{10}$/)
+    .optional(),
   businessName: z.string().min(2).max(200).optional(),
   businessAddress: z.string().min(5).max(500).optional(),
-  gstNumber: z.string().regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/).optional(),
-  panNumber: z.string().regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/).optional(),
+  gstNumber: z
+    .string()
+    .regex(/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/)
+    .optional(),
+  panNumber: z
+    .string()
+    .regex(/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/)
+    .optional(),
 });
 
 const updateBankingSchema = z.object({
@@ -61,6 +70,7 @@ export class SellerProfileController {
             id: seller.id,
             email: seller.email,
             name: seller.name,
+            role: seller.role,
             contactNumber: seller.contactNumber,
             avatar: seller.avatar,
             isApproved: seller.isApproved,
@@ -109,7 +119,8 @@ export class SellerProfileController {
       if (validatedData.name) userFields.name = validatedData.name;
       if (validatedData.contactNumber) userFields.contactNumber = validatedData.contactNumber;
       if (validatedData.businessName) sellerInfoFields.businessName = validatedData.businessName;
-      if (validatedData.businessAddress) sellerInfoFields.businessAddress = validatedData.businessAddress;
+      if (validatedData.businessAddress)
+        sellerInfoFields.businessAddress = validatedData.businessAddress;
       if (validatedData.gstNumber) sellerInfoFields.gstNumber = validatedData.gstNumber;
       if (validatedData.panNumber) sellerInfoFields.panNumber = validatedData.panNumber;
 

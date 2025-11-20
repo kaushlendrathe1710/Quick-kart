@@ -92,7 +92,7 @@ export async function getOrderById(orderId: number) {
   const order = await db.query.orders.findFirst({
     where: eq(orders.id, orderId),
     with: {
-      user: {
+      buyer: {
         columns: {
           id: true,
           name: true,

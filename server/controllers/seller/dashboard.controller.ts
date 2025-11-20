@@ -32,7 +32,7 @@ export class SellerDashboardController {
         orderBy: [desc(orders.createdAt)],
         limit: 5,
         with: {
-          user: {
+          buyer: {
             columns: {
               name: true,
               email: true,
@@ -88,7 +88,7 @@ export class SellerDashboardController {
         limit,
         offset,
         with: {
-          user: {
+          buyer: {
             columns: {
               name: true,
               email: true,

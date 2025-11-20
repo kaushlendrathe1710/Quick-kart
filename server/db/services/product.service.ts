@@ -14,6 +14,7 @@ import { ListProductsInput, PaginatedProductsResponse, Product } from '@shared/t
 export async function listProducts(filters: ListProductsInput): Promise<PaginatedProductsResponse> {
   const {
     category,
+    subcategory,
     minPrice,
     maxPrice,
     discount,
@@ -35,6 +36,11 @@ export async function listProducts(filters: ListProductsInput): Promise<Paginate
   // Category filter
   if (category) {
     conditions.push(eq(products.categoryId, category));
+  }
+
+  // Subcategory filter
+  if (subcategory) {
+    conditions.push(eq(products.subcategoryId, subcategory));
   }
 
   // Price range filter

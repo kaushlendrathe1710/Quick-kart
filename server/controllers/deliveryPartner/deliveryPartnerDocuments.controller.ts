@@ -93,7 +93,6 @@ export class DeliveryPartnerDocumentsController {
 
       console.log('Files received:', Object.keys(req.files || {}));
 
-
       // Check if documents already exist
       const existingDocs = await deliveryPartnerDocumentsService.documentsExist(userId);
       if (existingDocs) {
