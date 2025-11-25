@@ -27,6 +27,7 @@ export const cartItems = pgTable('cart_items', {
   productId: integer('product_id')
     .notNull()
     .references(() => products.id, { onDelete: 'cascade' }),
+  variantId: integer('variant_id'), // Optional: links to product_variants table
   quantity: integer('quantity').notNull().default(1),
   price: decimal('price', { precision: 10, scale: 2 }).notNull(),
   createdAt: timestamp('created_at').defaultNow(),

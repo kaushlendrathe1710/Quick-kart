@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { authApi, profileApi } from '@/api/buyer';
@@ -14,9 +14,9 @@ import {
   type CreateAddressInput,
   type Address,
 } from '@shared/types';
+import { INDIAN_STATES } from '@shared/constants';
 import Layout from '@/components/buyer/Layout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
@@ -29,6 +29,14 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { User, MapPin, Settings, Plus, Edit, Trash2, Loader2, CheckCircle2 } from 'lucide-react';
 import { useLocation } from 'wouter';
 
@@ -45,6 +53,7 @@ export default function ProfilePage() {
 
   // Profile form
   const profileForm = useForm({
+    resolver: zodResolver(updateProfileSchema),
     defaultValues: {
       name: currentUser?.name || '',
       contactNumber: currentUser?.contactNumber || '',
@@ -167,14 +176,8 @@ export default function ProfilePage() {
     );
   }
 
-  const onProfileSubmit = (data: { name: string; contactNumber: string }) => {
-    // Map form data to the API's expected format
-    const updateData: UpdateProfileRequest = {
-      // Note: The API expects username/bio but we're sending name/contactNumber
-      // This might need adjustment based on actual API
-    };
-    // For now, just show success message since the schema mismatch needs API update
-    toast.success('Profile updated');
+  const onProfileSubmit = (data: UpdateProfileRequest) => {
+    updateProfileMutation.mutate(data);
   };
 
   const onAddressSubmit = (data: CreateAddressInput) => {
@@ -277,9 +280,17 @@ export default function ProfilePage() {
                       placeholder="Your contact number"
                       {...profileForm.register('contactNumber')}
                     />
+                    {profileForm.formState.errors.contactNumber && (
+                      <p className="mt-1 text-sm text-red-600">
+                        {profileForm.formState.errors.contactNumber.message}
+                      </p>
+                    )}
                   </div>
 
-                  <Button type="submit" disabled={updateProfileMutation.isPending}>
+                  <Button
+                    type="submit"
+                    disabled={!profileForm.formState.isDirty || updateProfileMutation.isPending}
+                  >
                     {updateProfileMutation.isPending ? (
                       <>
                         <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -348,7 +359,11 @@ export default function ProfilePage() {
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <Label htmlFor="city">City</Label>
-                            <Input id="city" {...addressForm.register('city')} />
+                            <Input
+                              id="city"
+                              placeholder="Enter city name"
+                              {...addressForm.register('city')}
+                            />
                             {addressForm.formState.errors.city && (
                               <p className="mt-1 text-sm text-red-600">
                                 {addressForm.formState.errors.city.message}
@@ -357,14 +372,40 @@ export default function ProfilePage() {
                           </div>
                           <div>
                             <Label htmlFor="state">State</Label>
-                            <Input id="state" {...addressForm.register('state')} />
+                            <Controller
+                              name="state"
+                              control={addressForm.control}
+                              render={({ field }) => (
+                                <Select value={field.value || ''} onValueChange={field.onChange}>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select state" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {INDIAN_STATES.map((state) => (
+                                      <SelectItem key={state} value={state}>
+                                        {state}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              )}
+                            />
+                            {addressForm.formState.errors.state && (
+                              <p className="mt-1 text-sm text-red-600">
+                                {addressForm.formState.errors.state.message}
+                              </p>
+                            )}
                           </div>
                         </div>
 
                         <div className="grid grid-cols-2 gap-4">
                           <div>
-                            <Label htmlFor="postalCode">Postal Code</Label>
-                            <Input id="postalCode" {...addressForm.register('postalCode')} />
+                            <Label htmlFor="postalCode">Pincode</Label>
+                            <Input
+                              id="postalCode"
+                              placeholder="6-digit pincode"
+                              {...addressForm.register('postalCode')}
+                            />
                             {addressForm.formState.errors.postalCode && (
                               <p className="mt-1 text-sm text-red-600">
                                 {addressForm.formState.errors.postalCode.message}
@@ -373,7 +414,16 @@ export default function ProfilePage() {
                           </div>
                           <div>
                             <Label htmlFor="contactNumber">Contact Number</Label>
-                            <Input id="contactNumber" {...addressForm.register('contactNumber')} />
+                            <Input
+                              id="contactNumber"
+                              placeholder="10-digit number"
+                              {...addressForm.register('contactNumber')}
+                            />
+                            {addressForm.formState.errors.contactNumber && (
+                              <p className="mt-1 text-sm text-red-600">
+                                {addressForm.formState.errors.contactNumber.message}
+                              </p>
+                            )}
                           </div>
                         </div>
 
@@ -398,7 +448,9 @@ export default function ProfilePage() {
                           type="submit"
                           className="w-full"
                           disabled={
-                            createAddressMutation.isPending || updateAddressMutation.isPending
+                            !addressForm.formState.isDirty ||
+                            createAddressMutation.isPending ||
+                            updateAddressMutation.isPending
                           }
                         >
                           {createAddressMutation.isPending || updateAddressMutation.isPending ? (

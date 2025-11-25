@@ -11,3 +11,5 @@ export { registerSellerProductRoutes } from './product.routes';
 export { registerSellerOrderRoutes } from './order.routes';
 export { registerSellerReviewRoutes } from './review.routes';
 export { registerSellerBusinessRoutes } from './business.routes';
+export { registerSellerSettingsRoutes } from './settings.routes';
+export { registerSellerStoreRoutes } from './store.routes';

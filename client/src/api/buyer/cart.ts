@@ -60,4 +60,18 @@ export const cartApi = {
     const response = await apiClient.delete('/cart');
     return response.data;
   },
+
+  /**
+   * Sync guest cart with database cart
+   */
+  syncCart: async (
+    guestItems: Array<{
+      productId: number;
+      variantId?: number | null;
+      quantity: number;
+    }>
+  ): Promise<{ success: boolean; message: string }> => {
+    const response = await apiClient.post('/cart/sync', { items: guestItems });
+    return response.data;
+  },
 };

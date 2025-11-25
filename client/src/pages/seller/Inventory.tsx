@@ -29,8 +29,11 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { Search, Package, AlertTriangle, Edit, RefreshCw } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Search, Package, AlertTriangle, Edit, RefreshCw, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { getProducts, updateProductStock, type Product } from '@/api/seller/products';
 
 interface InventoryItem {
   id: number;
@@ -43,69 +46,66 @@ interface InventoryItem {
   lastUpdated: string;
 }
 
-// Mock data
-const mockInventory: InventoryItem[] = [
-  {
-    id: 1,
-    name: 'Premium Cotton T-Shirt',
-    sku: 'SKU-001',
-    category: 'Clothing',
-    currentStock: 150,
-    reorderLevel: 50,
-    status: 'in_stock',
-    lastUpdated: '2024-01-15',
-  },
-  {
-    id: 2,
-    name: 'Wireless Mouse',
-    sku: 'SKU-002',
-    category: 'Electronics',
-    currentStock: 25,
-    reorderLevel: 30,
-    status: 'low_stock',
-    lastUpdated: '2024-01-14',
-  },
-  {
-    id: 3,
-    name: 'Coffee Maker',
-    sku: 'SKU-003',
-    category: 'Home',
-    currentStock: 0,
-    reorderLevel: 20,
-    status: 'out_of_stock',
-    lastUpdated: '2024-01-13',
-  },
-  {
-    id: 4,
-    name: 'Yoga Mat',
-    sku: 'SKU-004',
-    category: 'Sports',
-    currentStock: 80,
-    reorderLevel: 25,
-    status: 'in_stock',
-    lastUpdated: '2024-01-15',
-  },
-  {
-    id: 5,
-    name: 'Desk Lamp',
-    sku: 'SKU-005',
-    category: 'Home',
-    currentStock: 15,
-    reorderLevel: 20,
-    status: 'low_stock',
-    lastUpdated: '2024-01-12',
-  },
-];
-
 export default function Inventory() {
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [categoryFilter, setCategoryFilter] = useState('all');
-  const [inventory, setInventory] = useState<InventoryItem[]>(mockInventory);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
   const [newStockValue, setNewStockValue] = useState('');
+  const queryClient = useQueryClient();
+
+  // Fetch products from API
+  const { data: productsData, isLoading } = useQuery({
+    queryKey: ['seller-products'],
+    queryFn: async () => {
+      const response = await getProducts({ page: 1, limit: 1000 });
+      return response;
+    },
+  });
+
+  // Stock update mutation
+  const updateStockMutation = useMutation({
+    mutationFn: ({ productId, stock }: { productId: number; stock: number }) =>
+      updateProductStock(productId, stock),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['seller-products'] });
+      toast.success('Stock updated successfully!');
+      setEditDialogOpen(false);
+      setSelectedItem(null);
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || 'Failed to update stock');
+    },
+  });
+
+  // Convert products to inventory items
+  const convertToInventoryItem = (product: Product): InventoryItem => {
+    const reorderLevel = 20; // Default reorder level
+    let status: 'in_stock' | 'low_stock' | 'out_of_stock';
+
+    if (product.stock === 0) {
+      status = 'out_of_stock';
+    } else if (product.stock <= reorderLevel) {
+      status = 'low_stock';
+    } else {
+      status = 'in_stock';
+    }
+
+    return {
+      id: product.id,
+      name: product.name,
+      sku: product.sku || `SKU-${product.id}`,
+      category: product.category,
+      currentStock: product.stock,
+      reorderLevel,
+      status,
+      lastUpdated: new Date(product.updatedAt || product.createdAt).toISOString().split('T')[0],
+    };
+  };
+
+  const inventory = productsData?.data?.map(convertToInventoryItem) || [];
 
   // Filter inventory
   const filteredInventory = inventory.filter((item) => {
@@ -138,32 +138,11 @@ export default function Inventory() {
       return;
     }
 
-    // Determine new status
-    let newStatus: 'in_stock' | 'low_stock' | 'out_of_stock';
-    if (newStock === 0) {
-      newStatus = 'out_of_stock';
-    } else if (newStock <= selectedItem.reorderLevel) {
-      newStatus = 'low_stock';
-    } else {
-      newStatus = 'in_stock';
-    }
-
-    setInventory((prev) =>
-      prev.map((item) =>
-        item.id === selectedItem.id
-          ? {
-              ...item,
-              currentStock: newStock,
-              status: newStatus,
-              lastUpdated: new Date().toISOString().split('T')[0],
-            }
-          : item
-      )
-    );
-
-    toast.success('Stock updated successfully!');
-    setEditDialogOpen(false);
-    setSelectedItem(null);
+    // Call API to update stock
+    updateStockMutation.mutate({
+      productId: selectedItem.id,
+      stock: newStock,
+    });
   };
 
   const getStatusBadge = (status: string) => {
@@ -301,7 +280,37 @@ export default function Inventory() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredInventory.length === 0 ? (
+                  {isLoading ? (
+                    // Loading skeleton
+                    Array.from({ length: 5 }).map((_, i) => (
+                      <TableRow key={i}>
+                        <TableCell>
+                          <Skeleton className="h-4 w-[150px]" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-[80px]" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-[100px]" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="ml-auto h-4 w-[50px]" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="ml-auto h-4 w-[50px]" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-6 w-[80px]" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="h-4 w-[80px]" />
+                        </TableCell>
+                        <TableCell>
+                          <Skeleton className="ml-auto h-8 w-[40px]" />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : filteredInventory.length === 0 ? (
                     <TableRow>
                       <TableCell colSpan={8} className="py-8 text-center text-muted-foreground">
                         No inventory items found
@@ -364,10 +373,28 @@ export default function Inventory() {
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEditDialogOpen(false)}
+                disabled={updateStockMutation.isPending}
+              >
                 Cancel
               </Button>
-              <Button onClick={handleUpdateStock}>Update Stock</Button>
+              <Button
+                type="button"
+                onClick={handleUpdateStock}
+                disabled={updateStockMutation.isPending}
+              >
+                {updateStockMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  'Update Stock'
+                )}
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

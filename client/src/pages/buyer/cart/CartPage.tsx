@@ -1,9 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useLocation } from 'wouter';
 import { toast } from 'sonner';
-import { cartApi } from '@/api/buyer';
+import { useState, useEffect } from 'react';
+import { cartApi, productsApi } from '@/api/buyer';
 import { cartKeys } from '@/constants/buyer';
 import { useAppSelector } from '@/store/hooks';
+import { guestCartUtils } from '@/utils/guestCart';
 import Layout from '@/components/buyer/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,19 +14,59 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ShoppingCart, Plus, Minus, Trash2, ArrowRight } from 'lucide-react';
 
 /**
- * Cart Page - Shopping cart management
+ * Cart Page - Shopping cart management (supports both auth and guest users)
  */
 export default function CartPage() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const [guestCart, setGuestCart] = useState(guestCartUtils.getCart());
+  const [guestProducts, setGuestProducts] = useState<any[]>([]);
+  const [loadingGuestProducts, setLoadingGuestProducts] = useState(false);
 
-  // Fetch cart
+  // Fetch authenticated user's cart
   const { data: cart, isLoading } = useQuery({
     queryKey: cartKeys.detail(),
     queryFn: cartApi.getCart,
     enabled: isAuthenticated,
   });
+
+  // Load guest cart products
+  useEffect(() => {
+    if (!isAuthenticated && guestCart.items.length > 0) {
+      setLoadingGuestProducts(true);
+      const productIds = Array.from(new Set(guestCart.items.map((item) => item.productId)));
+
+      Promise.all(productIds.map((id) => productsApi.getProductById(id).catch(() => null)))
+        .then((products) => {
+          setGuestProducts(products.filter(Boolean));
+        })
+        .catch((error) => {
+          console.error('Failed to load guest cart products:', error);
+          toast.error('Failed to load some products');
+        })
+        .finally(() => {
+          setLoadingGuestProducts(false);
+        });
+    }
+  }, [isAuthenticated, guestCart.items.length]);
+
+  // Update guest cart state when localStorage changes
+  useEffect(() => {
+    if (!isAuthenticated) {
+      const handleCartUpdate = () => {
+        setGuestCart(guestCartUtils.getCart());
+      };
+
+      window.addEventListener('guestCartUpdated', handleCartUpdate);
+      window.addEventListener('storage', handleCartUpdate);
+
+      return () => {
+        window.removeEventListener('guestCartUpdated', handleCartUpdate);
+        window.removeEventListener('storage', handleCartUpdate);
+      };
+    }
+  }, [isAuthenticated]);
 
   // Update cart item mutation
   const updateCartMutation = useMutation({
@@ -63,24 +105,45 @@ export default function CartPage() {
     },
   });
 
-  if (!isAuthenticated) {
-    return (
-      <Layout>
-        <div className="container mx-auto px-4 py-20">
-          <div className="text-center">
-            <ShoppingCart className="mx-auto h-24 w-24 text-gray-300" />
-            <h2 className="mt-4 text-2xl font-bold">Please Login</h2>
-            <p className="mt-2 text-gray-600">You need to login to view your cart</p>
-            <Button className="mt-6" onClick={() => setLocation('/auth')}>
-              Login
-            </Button>
-          </div>
-        </div>
-      </Layout>
-    );
-  }
+  // Guest cart handlers
+  const handleGuestUpdateQuantity = (
+    productId: number,
+    currentQuantity: number,
+    change: number,
+    variantId?: number | null
+  ) => {
+    const newQuantity = currentQuantity + change;
+    if (newQuantity > 0) {
+      guestCartUtils.updateItem(productId, newQuantity, variantId);
+      setGuestCart(guestCartUtils.getCart());
+      toast.success('Cart updated');
+    }
+  };
 
-  if (isLoading) {
+  const handleGuestRemove = (productId: number, variantId?: number | null) => {
+    if (confirm('Are you sure you want to remove this item?')) {
+      guestCartUtils.removeItem(productId, variantId);
+      setGuestCart(guestCartUtils.getCart());
+      toast.success('Item removed from cart');
+    }
+  };
+
+  const handleGuestClearCart = () => {
+    if (confirm('Are you sure you want to clear your cart?')) {
+      guestCartUtils.clearCart();
+      setGuestCart(guestCartUtils.getCart());
+      toast.success('Cart cleared');
+    }
+  };
+
+  // Determine if cart is empty
+  const isEmpty = isAuthenticated ? (cart?.items || []).length === 0 : guestCart.items.length === 0;
+
+  // Loading state
+  if (
+    (isAuthenticated && isLoading) ||
+    (!isAuthenticated && loadingGuestProducts && guestCart.items.length > 0)
+  ) {
     return (
       <Layout>
         <div className="container mx-auto px-4 py-8">
@@ -98,27 +161,26 @@ export default function CartPage() {
     );
   }
 
-  const cartItems = cart?.items || [];
-  const isEmpty = cartItems.length === 0;
+  // Calculate cart totals
+  let subtotal = 0;
+  let totalItems = 0;
 
-  if (isEmpty) {
-    return (
-      <Layout>
-        <div className="container mx-auto px-4 py-20">
-          <div className="text-center">
-            <ShoppingCart className="mx-auto h-24 w-24 text-gray-300" />
-            <h2 className="mt-4 text-2xl font-bold">Your cart is empty</h2>
-            <p className="mt-2 text-gray-600">Add some products to get started</p>
-            <Button className="mt-6" onClick={() => setLocation('/products')}>
-              Continue Shopping
-            </Button>
-          </div>
-        </div>
-      </Layout>
-    );
+  if (isAuthenticated && cart) {
+    subtotal = parseFloat(cart.subtotal || '0');
+    totalItems = cart.totalItems || 0;
+  } else if (!isAuthenticated) {
+    guestCart.items.forEach((item) => {
+      const product = guestProducts.find((p) => p.id === item.productId);
+      if (product) {
+        // Check if there's a variant with specific price
+        const variant = product.variants?.find((v: any) => v.id === item.variantId);
+        const price = variant ? variant.price : product.price;
+        subtotal += price * item.quantity;
+        totalItems += item.quantity;
+      }
+    });
   }
 
-  const subtotal = parseFloat(cart?.subtotal || '0');
   const shipping = subtotal > 500 ? 0 : 50; // Free shipping over ₹500
   const tax = subtotal * 0.18; // 18% GST
   const total = subtotal + shipping + tax;
@@ -138,9 +200,68 @@ export default function CartPage() {
 
   const handleClearCart = () => {
     if (confirm('Are you sure you want to clear your cart?')) {
-      clearCartMutation.mutate();
+      if (isAuthenticated) {
+        clearCartMutation.mutate();
+      } else {
+        handleGuestClearCart();
+      }
     }
   };
+
+  // Prepare cart items for rendering
+  type CartItemDisplay = {
+    id: string | number;
+    productId: number;
+    variantId?: number | null;
+    quantity: number;
+    product: any;
+  };
+
+  const cartItems: CartItemDisplay[] = isAuthenticated
+    ? (cart?.items || []).map((item) => ({
+        id: item.id,
+        productId: item.productId || item.product?.id || 0,
+        variantId: (item as any).variantId || null,
+        quantity: item.quantity,
+        product: item.product,
+      }))
+    : guestCart.items
+        .map((guestItem) => {
+          const product = guestProducts.find((p) => p.id === guestItem.productId);
+          if (!product) return null;
+
+          const variant = product.variants?.find((v: any) => v.id === guestItem.variantId);
+
+          return {
+            id: `${guestItem.productId}-${guestItem.variantId || 'no-variant'}`,
+            productId: guestItem.productId,
+            variantId: guestItem.variantId || null,
+            quantity: guestItem.quantity,
+            product: {
+              ...product,
+              price: variant ? variant.price : product.price,
+              stock: variant ? variant.stock : product.stock,
+            },
+          };
+        })
+        .filter((item): item is Exclude<typeof item, null> => item !== null);
+
+  if (isEmpty) {
+    return (
+      <Layout>
+        <div className="container mx-auto px-4 py-20">
+          <div className="text-center">
+            <ShoppingCart className="mx-auto h-24 w-24 text-gray-300" />
+            <h2 className="mt-4 text-2xl font-bold">Your cart is empty</h2>
+            <p className="mt-2 text-gray-600">Add some products to get started</p>
+            <Button className="mt-6" onClick={() => setLocation('/products')}>
+              Continue Shopping
+            </Button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -166,17 +287,36 @@ export default function CartPage() {
               const product = item.product;
               if (!product) return null;
 
+              // Get variant details from the item
+              const variant = (item as any).variant;
+
+              // Use variant image if available, otherwise product image
               const imageUrl =
+                (variant?.images && JSON.parse(variant.images)?.[0]) ||
                 product.thumbnail ||
                 (product.imageUrls ? JSON.parse(product.imageUrls)[0] : null) ||
                 '/placeholder-product.png';
+
+              // Build variant label (e.g., "Color: Blue, Size: XL")
+              const variantLabel: string[] = [];
+              if (variant) {
+                if (variant.color) variantLabel.push(`Color: ${variant.color}`);
+                if (variant.size) variantLabel.push(`Size: ${variant.size}`);
+                if (variant.sku) variantLabel.push(`SKU: ${variant.sku}`);
+              }
 
               return (
                 <Card key={item.id}>
                   <CardContent className="p-4">
                     <div className="flex gap-4">
-                      {/* Product Image */}
-                      <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
+                      {/* Product Image - Clickable */}
+                      <div
+                        className="h-24 w-24 flex-shrink-0 cursor-pointer overflow-hidden rounded-lg bg-gray-100 transition-opacity hover:opacity-80"
+                        onClick={() => {
+                          const url = `/products/${product.id}${item.variantId ? `?variant=${item.variantId}` : ''}`;
+                          setLocation(url);
+                        }}
+                      >
                         <img
                           src={imageUrl}
                           alt={product.name}
@@ -187,8 +327,22 @@ export default function CartPage() {
                       {/* Product Info */}
                       <div className="flex flex-1 flex-col justify-between">
                         <div>
-                          <h3 className="line-clamp-1 font-semibold">{product.name}</h3>
-                          <p className="text-sm text-gray-600">
+                          <h3
+                            className="line-clamp-1 cursor-pointer font-semibold transition-colors hover:text-blue-600"
+                            onClick={() => {
+                              const url = `/products/${product.id}${item.variantId ? `?variant=${item.variantId}` : ''}`;
+                              setLocation(url);
+                            }}
+                          >
+                            {product.name}
+                          </h3>
+
+                          {/* Display variant details */}
+                          {variantLabel.length > 0 && (
+                            <p className="mt-1 text-xs text-gray-500">{variantLabel.join(' • ')}</p>
+                          )}
+
+                          <p className="mt-1 text-sm text-gray-600">
                             ₹{parseFloat(product.price.toString()).toFixed(2)} each
                           </p>
                           {product.stock && product.stock < 10 && (
@@ -205,8 +359,23 @@ export default function CartPage() {
                               variant="outline"
                               size="icon"
                               className="h-8 w-8"
-                              onClick={() => handleUpdateQuantity(product.id, item.quantity, -1)}
-                              disabled={updateCartMutation.isPending || item.quantity <= 1}
+                              onClick={() => {
+                                if (isAuthenticated) {
+                                  handleUpdateQuantity(product.id, item.quantity, -1);
+                                } else {
+                                  handleGuestUpdateQuantity(
+                                    item.productId,
+                                    item.quantity,
+                                    -1,
+                                    item.variantId
+                                  );
+                                }
+                              }}
+                              disabled={
+                                isAuthenticated
+                                  ? updateCartMutation.isPending || item.quantity <= 1
+                                  : item.quantity <= 1
+                              }
                             >
                               <Minus className="h-3 w-3" />
                             </Button>
@@ -215,10 +384,23 @@ export default function CartPage() {
                               variant="outline"
                               size="icon"
                               className="h-8 w-8"
-                              onClick={() => handleUpdateQuantity(product.id, item.quantity, 1)}
+                              onClick={() => {
+                                if (isAuthenticated) {
+                                  handleUpdateQuantity(product.id, item.quantity, 1);
+                                } else {
+                                  handleGuestUpdateQuantity(
+                                    item.productId,
+                                    item.quantity,
+                                    1,
+                                    item.variantId
+                                  );
+                                }
+                              }}
                               disabled={
-                                updateCartMutation.isPending ||
-                                item.quantity >= (product.stock || 999)
+                                isAuthenticated
+                                  ? updateCartMutation.isPending ||
+                                    item.quantity >= (product.stock || 999)
+                                  : item.quantity >= (product.stock || 999)
                               }
                             >
                               <Plus className="h-3 w-3" />
@@ -234,8 +416,14 @@ export default function CartPage() {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 text-red-600 hover:text-red-700"
-                              onClick={() => handleRemove(product.id)}
-                              disabled={removeFromCartMutation.isPending}
+                              onClick={() => {
+                                if (isAuthenticated) {
+                                  handleRemove(product.id);
+                                } else {
+                                  handleGuestRemove(item.productId, item.variantId);
+                                }
+                              }}
+                              disabled={isAuthenticated && removeFromCartMutation.isPending}
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -257,7 +445,7 @@ export default function CartPage() {
 
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-600">Subtotal ({cart?.totalItems} items)</span>
+                    <span className="text-gray-600">Subtotal ({totalItems} items)</span>
                     <span className="font-semibold">₹{subtotal.toFixed(2)}</span>
                   </div>
 
@@ -272,7 +460,7 @@ export default function CartPage() {
                     </span>
                   </div>
 
-                  {shipping > 0 && (
+                  {shipping > 0 && subtotal < 500 && (
                     <p className="text-xs text-gray-500">
                       Add ₹{(500 - subtotal).toFixed(2)} more for free shipping
                     </p>
@@ -291,8 +479,25 @@ export default function CartPage() {
                   </div>
                 </div>
 
-                <Button className="mt-6 w-full" size="lg" onClick={() => setLocation('/checkout')}>
-                  Proceed to Checkout
+                {!isAuthenticated && (
+                  <div className="mt-4 rounded-lg bg-amber-50 p-3 text-sm text-amber-800">
+                    Please login to proceed with checkout
+                  </div>
+                )}
+
+                <Button
+                  className="mt-6 w-full"
+                  size="lg"
+                  onClick={() => {
+                    if (!isAuthenticated) {
+                      toast.info('Please login to proceed with checkout');
+                      setLocation('/auth');
+                    } else {
+                      setLocation('/checkout');
+                    }
+                  }}
+                >
+                  {!isAuthenticated ? 'Login to Checkout' : 'Proceed to Checkout'}
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
 

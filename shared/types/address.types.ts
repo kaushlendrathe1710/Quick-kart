@@ -11,12 +11,12 @@ export const createAddressSchema = z.object({
   addressLine: z.string().min(5).max(500),
   city: z.string().min(2).max(100),
   state: z.string().max(100).optional(),
-  postalCode: z.string().min(4).max(20),
+  postalCode: z.string().regex(/^\d{6}$/, 'Pincode must be exactly 6 digits'),
   country: z.string().min(2).max(100).default('India'),
   landmark: z.string().optional(),
   contactNumber: z
     .string()
-    .regex(/^\+?[1-9]\d{1,14}$/)
+    .regex(/^[6-9]\d{9}$/, 'Contact number must be 10 digits starting with 6-9')
     .optional(),
   latitude: z
     .number()

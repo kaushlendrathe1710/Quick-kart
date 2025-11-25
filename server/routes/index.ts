@@ -39,6 +39,8 @@ import {
   registerSellerOrderRoutes,
   registerSellerReviewRoutes,
   registerSellerBusinessRoutes,
+  registerSellerSettingsRoutes,
+  registerSellerStoreRoutes,
 } from './seller/index.js';
 import { registerSellerDeliveryRoutes } from './seller/delivery.routes.js';
 
@@ -97,6 +99,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerSellerOrderRoutes(app);
   registerSellerReviewRoutes(app);
   registerSellerBusinessRoutes(app);
+  registerSellerSettingsRoutes(app);
+  registerSellerStoreRoutes(app);
 
   // ============================================
   // ADMIN ROUTES

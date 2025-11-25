@@ -1,5 +1,5 @@
 import { db } from '@server/db/connect';
-import { products, categories } from '@server/db/schema';
+import { products, categories, productVariants } from '@server/db/schema';
 import { eq, and, gte, lte, like, or, desc, asc, sql, SQL } from 'drizzle-orm';
 import { ListProductsInput, PaginatedProductsResponse, Product } from '@shared/types';
 
@@ -30,8 +30,9 @@ export async function listProducts(filters: ListProductsInput): Promise<Paginate
   // Build where conditions
   const conditions: SQL[] = [];
 
-  // Filter by active products only
+  // Filter by active and approved products only
   conditions.push(eq(products.isActive, true));
+  conditions.push(eq(products.approved, true));
 
   // Category filter
   if (category) {
@@ -127,12 +128,28 @@ export async function listProducts(filters: ListProductsInput): Promise<Paginate
 }
 
 /**
- * Get product by ID
+ * Get product by ID with variants
  */
 export async function getProductById(productId: number): Promise<Product | undefined> {
-  const result = await db.select().from(products).where(eq(products.id, productId)).limit(1);
+  const result = await db
+    .select()
+    .from(products)
+    .where(and(eq(products.id, productId), eq(products.approved, true)))
+    .limit(1);
 
   return result[0];
+}
+
+/**
+ * Get product variants by product ID
+ */
+export async function getProductVariants(productId: number) {
+  const variants = await db
+    .select()
+    .from(productVariants)
+    .where(eq(productVariants.productId, productId));
+
+  return variants;
 }
 
 /**

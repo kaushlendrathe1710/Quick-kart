@@ -9,10 +9,15 @@ export interface DashboardAnalytics {
   totalRevenue: number;
   totalOrders: number;
   totalProducts: number;
+  totalProductsSold?: number;
   pendingOrders: number;
   averageOrderValue: number;
   revenueGrowth?: number;
   ordersGrowth?: number;
+  previousPeriodRevenue?: number;
+  previousPeriodOrders?: number;
+  previousPeriodProductsSold?: number;
+  ordersByStatus?: Array<{ status: string; count: number }>;
 }
 
 export interface DashboardOrderItem {
@@ -35,7 +40,7 @@ export interface DashboardOrder {
   status: string;
   totalAmount: string;
   createdAt: string;
-  user: {
+  buyer: {
     name: string | null;
     email: string;
   };

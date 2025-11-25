@@ -6,6 +6,7 @@ import { eq, and } from 'drizzle-orm';
 import { generateInvoice } from '@server/utils/invoiceGenerator';
 import { generateShippingLabel } from '@server/utils/shippingLabelGenerator';
 import { getPaginationParams, createPaginatedResponse } from '@server/utils/pagination.utils';
+import { confirmOrderAndCreateDelivery } from '@server/utils/delivery.utils';
 
 /**
  * Seller Order Controller
@@ -381,23 +382,57 @@ export class SellerOrderController {
         });
       }
 
-      // Update order
-      const [updatedOrder] = await db
-        .update(orders)
-        .set({
-          orderStatus: status,
-          trackingNumber: trackingNumber || order.trackingNumber,
-          courierName: courierName || order.courierName,
-          updatedAt: new Date(),
-        })
-        .where(eq(orders.id, orderId))
-        .returning();
+      try {
+        // Use the utility function to update order and create delivery if needed
+        const result = await confirmOrderAndCreateDelivery(orderId, sellerId, status);
 
-      return res.status(200).json({
-        success: true,
-        message: 'Order status updated successfully',
-        data: updatedOrder,
-      });
+        // Update tracking info if provided
+        if (trackingNumber || courierName) {
+          await db
+            .update(orders)
+            .set({
+              trackingNumber: trackingNumber || order.trackingNumber,
+              courierName: courierName || order.courierName,
+              updatedAt: new Date(),
+            })
+            .where(eq(orders.id, orderId));
+        }
+
+        return res.status(200).json({
+          success: true,
+          message: result.deliveryCreated
+            ? 'Order confirmed and delivery created successfully'
+            : 'Order status updated successfully',
+          data: {
+            order: result.order,
+            delivery: result.delivery,
+            deliveryCreated: result.deliveryCreated,
+          },
+        });
+      } catch (deliveryError) {
+        // If delivery creation fails, log error but still update order status
+        console.error('Error creating delivery:', deliveryError);
+
+        const [updatedOrder] = await db
+          .update(orders)
+          .set({
+            orderStatus: status,
+            trackingNumber: trackingNumber || order.trackingNumber,
+            courierName: courierName || order.courierName,
+            updatedAt: new Date(),
+          })
+          .where(eq(orders.id, orderId))
+          .returning();
+
+        return res.status(200).json({
+          success: true,
+          message: 'Order status updated (delivery creation failed)',
+          data: {
+            order: updatedOrder,
+            deliveryError: deliveryError instanceof Error ? deliveryError.message : 'Unknown error',
+          },
+        });
+      }
     } catch (error) {
       console.error('Error updating order status:', error);
       return res.status(500).json({

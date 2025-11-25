@@ -1,8 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'wouter';
 import { toast } from 'sonner';
 import { wishlistApi, cartApi } from '@/api/buyer';
 import { wishlistKeys, cartKeys } from '@/constants/buyer';
+import { useWishlist } from '@/hooks/buyer';
 import Layout from '@/components/buyer/Layout';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -15,24 +16,12 @@ import type { Product } from '@shared/types';
  */
 export default function WishlistPage() {
   const queryClient = useQueryClient();
+  const { wishlist, isLoadingWishlist, toggleWishlist } = useWishlist();
 
-  // Fetch wishlist
-  const { data: wishlistData, isLoading } = useQuery({
-    queryKey: wishlistKeys.detail(),
-    queryFn: wishlistApi.getWishlist,
-  });
-
-  // Remove from wishlist
-  const removeFromWishlistMutation = useMutation({
-    mutationFn: (productId: number) => wishlistApi.removeFromWishlist(productId),
-    onSuccess: () => {
-      toast.success('Removed from wishlist');
-      queryClient.invalidateQueries({ queryKey: wishlistKeys.all });
-    },
-    onError: (error: any) => {
-      toast.error(error || 'Failed to remove from wishlist');
-    },
-  });
+  // Remove from wishlist (using toggle function)
+  const handleRemoveFromWishlist = (productId: number) => {
+    toggleWishlist(productId);
+  };
 
   // Move to cart
   const moveToCartMutation = useMutation({
@@ -50,7 +39,7 @@ export default function WishlistPage() {
     },
   });
 
-  const wishlistItems = wishlistData?.data || [];
+  const wishlistItems = wishlist || [];
 
   return (
     <Layout>
@@ -64,7 +53,7 @@ export default function WishlistPage() {
           </div>
         </div>
 
-        {isLoading ? (
+        {isLoadingWishlist ? (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {Array.from({ length: 8 }).map((_, i) => (
               <Skeleton key={i} className="h-96 rounded-lg" />
@@ -147,8 +136,7 @@ export default function WishlistPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => removeFromWishlistMutation.mutate(product.id)}
-                        disabled={removeFromWishlistMutation.isPending}
+                        onClick={() => handleRemoveFromWishlist(product.id)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

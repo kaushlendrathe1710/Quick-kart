@@ -1,28 +1,44 @@
-import { useState } from 'react';
-import { useRoute } from 'wouter';
+import { useState, useEffect } from 'react';
+import { useRoute, useLocation } from 'wouter';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { productsApi, cartApi, wishlistApi } from '@/api/buyer';
-import { productKeys, cartKeys, wishlistKeys } from '@/constants/buyer';
+import { productsApi, cartApi } from '@/api/buyer';
+import { productKeys, cartKeys } from '@/constants/buyer';
 import { useAppSelector } from '@/store/hooks';
+import { useWishlist } from '@/hooks/buyer';
+import { guestCartUtils } from '@/utils/guestCart';
 import Layout from '@/components/buyer/Layout';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Heart, ShoppingCart, Star, Minus, Plus, Package, Truck, Shield } from 'lucide-react';
+import {
+  Heart,
+  ShoppingCart,
+  Star,
+  Minus,
+  Plus,
+  Package,
+  Truck,
+  Shield,
+  ShoppingBag,
+} from 'lucide-react';
 
 /**
  * Product Details Page - Detailed product information
  */
 export default function ProductDetailsPage() {
   const [, params] = useRoute('/products/:id');
+  const [, setLocation] = useLocation();
   const productId = params?.id ? parseInt(params.id) : 0;
   const queryClient = useQueryClient();
   const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const { isInWishlist, toggleWishlist, isTogglingWishlist } = useWishlist();
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState(0);
+  const [selectedVariant, setSelectedVariant] = useState<any>(null);
+  const [variants, setVariants] = useState<any[]>([]);
 
   // Fetch product details
   const { data: product, isLoading } = useQuery({
@@ -38,27 +54,81 @@ export default function ProductDetailsPage() {
     enabled: productId > 0,
   });
 
+  // Fetch cart to check if product/variant is in cart
+  const { data: cartData } = useQuery({
+    queryKey: cartKeys.all,
+    queryFn: cartApi.getCart,
+    enabled: isAuthenticated,
+  });
+
+  // Parse variants when product loads
+  useEffect(() => {
+    if (product?.variants) {
+      try {
+        // Variants are now an array from the API, not JSON string
+        const parsedVariants = Array.isArray(product.variants) ? product.variants : [];
+
+        if (parsedVariants.length > 0) {
+          setVariants(parsedVariants);
+
+          // Check if variant ID is in URL query params (from cart navigation)
+          const urlParams = new URLSearchParams(window.location.search);
+          const variantIdFromUrl = urlParams.get('variant');
+
+          if (variantIdFromUrl) {
+            const preselectedVariant = parsedVariants.find(
+              (v: any) => v.id === parseInt(variantIdFromUrl)
+            );
+            if (preselectedVariant) {
+              setSelectedVariant(preselectedVariant);
+            } else {
+              setSelectedVariant(parsedVariants[0]);
+            }
+          } else {
+            setSelectedVariant(parsedVariants[0]);
+          }
+        }
+      } catch (error) {
+        console.error('Failed to parse variants:', error);
+      }
+    }
+  }, [product]);
+
+  // Check if current selection is in cart
+  const isInCart = () => {
+    if (isAuthenticated && cartData) {
+      return cartData.items.some(
+        (item: any) =>
+          item.productId === productId &&
+          (!selectedVariant || item.variantId === selectedVariant?.id)
+      );
+    } else {
+      return guestCartUtils.isInCart(productId, selectedVariant?.id);
+    }
+  };
+
   // Add to cart mutation
   const addToCartMutation = useMutation({
-    mutationFn: () => cartApi.addToCart({ productId, quantity }),
+    mutationFn: () => {
+      if (isAuthenticated) {
+        return cartApi.addToCart({
+          productId,
+          quantity,
+          variantId: selectedVariant?.id,
+        });
+      } else {
+        guestCartUtils.addItem(productId, quantity, selectedVariant?.id);
+        return Promise.resolve({ success: true, message: 'Added to cart' });
+      }
+    },
     onSuccess: () => {
       toast.success('Added to cart');
-      queryClient.invalidateQueries({ queryKey: cartKeys.all });
+      if (isAuthenticated) {
+        queryClient.invalidateQueries({ queryKey: cartKeys.all });
+      }
     },
     onError: (error: any) => {
       toast.error(error || 'Failed to add to cart');
-    },
-  });
-
-  // Add to wishlist mutation
-  const addToWishlistMutation = useMutation({
-    mutationFn: () => wishlistApi.addToWishlist({ productId }),
-    onSuccess: () => {
-      toast.success('Added to wishlist');
-      queryClient.invalidateQueries({ queryKey: wishlistKeys.all });
-    },
-    onError: (error: any) => {
-      toast.error(error || 'Failed to add to wishlist');
     },
   });
 
@@ -91,27 +161,91 @@ export default function ProductDetailsPage() {
   }
 
   const images = product.imageUrls ? JSON.parse(product.imageUrls) : [product.thumbnail];
-  // Calculate discount from MRP
   const mrp = product.mrp || product.price;
-  const discount = mrp > product.price ? ((mrp - product.price) / mrp) * 100 : 0;
-  const price = typeof product.price === 'string' ? parseFloat(product.price) : product.price;
+  const discount =
+    mrp > product.price ? Math.round(((mrp - product.price) / mrp) * 100 * 100) / 100 : 0;
+
+  // Use variant price if selected, otherwise use product price
+  const currentPrice = selectedVariant?.price || product.price;
+  const price = typeof currentPrice === 'string' ? parseFloat(currentPrice) : currentPrice;
   const finalPrice = price;
-  const inStock = product.stock && product.stock > 0;
+
+  // Stock check - use variant stock if available
+  const currentStock = selectedVariant?.stock !== undefined ? selectedVariant.stock : product.stock;
+  const inStock = currentStock && currentStock > 0;
 
   const handleAddToCart = () => {
-    if (!isAuthenticated) {
-      toast.error('Please login to add items to cart');
-      return;
-    }
     addToCartMutation.mutate();
   };
 
+  const handleGoToCart = () => {
+    setLocation('/cart');
+  };
+
   const handleAddToWishlist = () => {
-    if (!isAuthenticated) {
-      toast.error('Please login to add items to wishlist');
-      return;
+    toggleWishlist(productId);
+  };
+
+  // Group variants by attribute (color, size, etc.)
+  const variantGroups = variants.reduce((acc: any, variant: any) => {
+    if (variant.color && !acc.color) acc.color = [];
+    if (variant.size && !acc.size) acc.size = [];
+
+    if (variant.color && !acc.color.includes(variant.color)) {
+      acc.color.push(variant.color);
     }
-    addToWishlistMutation.mutate();
+    if (variant.size && !acc.size.includes(variant.size)) {
+      acc.size.push(variant.size);
+    }
+    return acc;
+  }, {});
+
+  // Helper function to check if a variant combination exists
+  const isVariantAvailable = (attribute: string, value: string): boolean => {
+    const desiredColor = attribute === 'color' ? value : selectedVariant?.color;
+    const desiredSize = attribute === 'size' ? value : selectedVariant?.size;
+
+    return variants.some((v: any) => {
+      const colorMatch = !desiredColor || v.color === desiredColor;
+      const sizeMatch = !desiredSize || v.size === desiredSize;
+      return colorMatch && sizeMatch;
+    });
+  };
+
+  const handleVariantSelect = (attribute: string, value: string) => {
+    // Build the desired combination based on current selection and new value
+    const desiredColor = attribute === 'color' ? value : selectedVariant?.color;
+    const desiredSize = attribute === 'size' ? value : selectedVariant?.size;
+
+    // Try to find exact match with both attributes
+    let matchedVariant = variants.find((v: any) => {
+      const colorMatch = !desiredColor || v.color === desiredColor;
+      const sizeMatch = !desiredSize || v.size === desiredSize;
+      return colorMatch && sizeMatch;
+    });
+
+    if (matchedVariant) {
+      setSelectedVariant(matchedVariant);
+    } else {
+      // Combination doesn't exist - show toast
+      if (attribute === 'color' && desiredSize) {
+        toast.error(`Size ${desiredSize} is not available in color ${value}`);
+      } else if (attribute === 'size' && desiredColor) {
+        toast.error(`Size ${value} is not available in color ${desiredColor}`);
+      }
+
+      // Try to find a fallback: keep the attribute user just selected, find any variant with it
+      const fallbackVariant = variants.find((v: any) => {
+        if (attribute === 'color') return v.color === value;
+        if (attribute === 'size') return v.size === value;
+        return false;
+      });
+
+      if (fallbackVariant) {
+        setSelectedVariant(fallbackVariant);
+      }
+      // If no fallback found, keep current selection (don't change)
+    }
   };
 
   return (
@@ -178,8 +312,8 @@ export default function ProductDetailsPage() {
                 <span className="text-4xl font-bold">₹{finalPrice.toFixed(2)}</span>
                 {discount > 0 && (
                   <>
-                    <span className="text-xl text-gray-500 line-through">₹{price.toFixed(2)}</span>
-                    <Badge variant="secondary">Save ₹{(price - finalPrice).toFixed(2)}</Badge>
+                    <span className="text-xl text-gray-500 line-through">₹{mrp.toFixed(2)}</span>
+                    <Badge variant="secondary">Save ₹{(mrp - finalPrice).toFixed(2)}</Badge>
                   </>
                 )}
               </div>
@@ -187,6 +321,66 @@ export default function ProductDetailsPage() {
             </div>
 
             <Separator />
+
+            {/* Variant Selection */}
+            {variants.length > 0 && (
+              <div className="space-y-4">
+                {variantGroups.color && (
+                  <div>
+                    <label className="mb-2 block font-semibold">Color:</label>
+                    <div className="flex flex-wrap gap-2">
+                      {variantGroups.color.map((color: string) => {
+                        const available = isVariantAvailable('color', color);
+                        return (
+                          <button
+                            key={color}
+                            onClick={() => handleVariantSelect('color', color)}
+                            disabled={!available}
+                            className={`rounded-lg border-2 px-4 py-2 transition-colors ${
+                              selectedVariant?.color === color
+                                ? 'border-blue-600 bg-blue-50'
+                                : available
+                                  ? 'border-gray-300 hover:border-gray-400'
+                                  : 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400'
+                            }`}
+                          >
+                            {color}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {variantGroups.size && (
+                  <div>
+                    <label className="mb-2 block font-semibold">Size:</label>
+                    <div className="flex flex-wrap gap-2">
+                      {variantGroups.size.map((size: string) => {
+                        const available = isVariantAvailable('size', size);
+                        return (
+                          <button
+                            key={size}
+                            onClick={() => handleVariantSelect('size', size)}
+                            disabled={!available}
+                            className={`rounded-lg border-2 px-4 py-2 transition-colors ${
+                              selectedVariant?.size === size
+                                ? 'border-blue-600 bg-blue-50'
+                                : available
+                                  ? 'border-gray-300 hover:border-gray-400'
+                                  : 'cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400'
+                            }`}
+                          >
+                            {size}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                <Separator />
+              </div>
+            )}
 
             <div>
               <h3 className="mb-2 font-semibold">Description</h3>
@@ -210,32 +404,47 @@ export default function ProductDetailsPage() {
                     <Button
                       variant="outline"
                       size="icon"
-                      onClick={() => setQuantity(Math.min(product.stock || 999, quantity + 1))}
-                      disabled={quantity >= (product.stock || 999)}
+                      onClick={() => setQuantity(Math.min(currentStock || 999, quantity + 1))}
+                      disabled={quantity >= (currentStock || 999)}
                     >
                       <Plus className="h-4 w-4" />
                     </Button>
                   </div>
-                  <span className="text-sm text-gray-600">{product.stock} in stock</span>
+                  <span className="text-sm text-gray-600">{currentStock} in stock</span>
                 </div>
 
                 <div className="flex gap-4">
-                  <Button
-                    className="flex-1"
-                    size="lg"
-                    onClick={handleAddToCart}
-                    disabled={addToCartMutation.isPending}
-                  >
-                    <ShoppingCart className="mr-2 h-5 w-5" />
-                    Add to Cart
-                  </Button>
+                  {isInCart() ? (
+                    <Button
+                      className="flex-1"
+                      size="lg"
+                      variant="secondary"
+                      onClick={handleGoToCart}
+                    >
+                      <ShoppingBag className="mr-2 h-5 w-5" />
+                      Go to Cart
+                    </Button>
+                  ) : (
+                    <Button
+                      className="flex-1"
+                      size="lg"
+                      onClick={handleAddToCart}
+                      disabled={addToCartMutation.isPending}
+                    >
+                      <ShoppingCart className="mr-2 h-5 w-5" />
+                      Add to Cart
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     size="lg"
                     onClick={handleAddToWishlist}
-                    disabled={addToWishlistMutation.isPending}
+                    disabled={isTogglingWishlist || !isAuthenticated}
+                    className={isInWishlist(productId) ? 'border-red-500 bg-red-50' : ''}
                   >
-                    <Heart className="h-5 w-5" />
+                    <Heart
+                      className={`h-5 w-5 transition-colors ${isInWishlist(productId) ? 'fill-red-500 text-red-500' : ''}`}
+                    />
                   </Button>
                 </div>
               </>

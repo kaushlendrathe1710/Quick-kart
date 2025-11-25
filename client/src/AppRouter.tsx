@@ -67,9 +67,9 @@ export default function AppRouter() {
         </PublicRoute>
       </Route>
       <Route path="/cart">
-        <BuyerRoute>
+        <PublicRoute>
           <CartPage />
-        </BuyerRoute>
+        </PublicRoute>
       </Route>
       <Route path="/wishlist">
         <BuyerRoute>

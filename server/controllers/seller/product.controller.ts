@@ -608,4 +608,65 @@ export class SellerProductController {
       });
     }
   }
+
+  /**
+   * Update product stock only
+   * PATCH /api/seller/products/:id/stock
+   */
+  static async updateProductStock(req: AuthenticatedRequest, res: Response) {
+    try {
+      const sellerId = req.user!.id;
+      const productId = parseInt(req.params.id);
+      const { stock } = req.body;
+
+      if (isNaN(productId)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid product ID',
+        });
+      }
+
+      if (typeof stock !== 'number' || stock < 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Stock must be a non-negative number',
+        });
+      }
+
+      // Check product ownership
+      const product = await db.query.products.findFirst({
+        where: and(eq(products.id, productId), eq(products.sellerId, sellerId)),
+      });
+
+      if (!product) {
+        return res.status(404).json({
+          success: false,
+          message: 'Product not found',
+        });
+      }
+
+      // Update stock
+      const [updatedProduct] = await db
+        .update(products)
+        .set({
+          stock,
+          updatedAt: new Date(),
+        })
+        .where(eq(products.id, productId))
+        .returning();
+
+      return res.status(200).json({
+        success: true,
+        message: 'Product stock updated successfully',
+        data: updatedProduct,
+      });
+    } catch (error) {
+      console.error('Error updating product stock:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to update product stock',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
 }

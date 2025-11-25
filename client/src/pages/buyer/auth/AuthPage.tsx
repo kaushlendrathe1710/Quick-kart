@@ -1,13 +1,14 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { authApi } from '@/api/buyer';
+import { authApi, cartApi } from '@/api/buyer';
 import { useAppDispatch } from '@/store/hooks';
 import { setUser, setToken, setRequiresProfile } from '@/store/slices/authSlice';
+import { guestCartUtils } from '@/utils/guestCart';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -43,6 +44,8 @@ export default function AuthPage() {
   const dispatch = useAppDispatch();
   const [step, setStep] = useState<'email' | 'otp' | 'profile'>('email');
   const [email, setEmail] = useState('');
+  const [resendDisabled, setResendDisabled] = useState(true);
+  const [countdown, setCountdown] = useState(30);
 
   // Email form
   const emailForm = useForm<EmailForm>({
@@ -74,7 +77,7 @@ export default function AuthPage() {
   // Verify OTP mutation
   const verifyOtpMutation = useMutation({
     mutationFn: authApi.verifyOtp,
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       toast.success(data.message || 'Login successful');
 
       // Check user role and handle accordingly
@@ -87,6 +90,21 @@ export default function AuthPage() {
 
       // Store user (works for all roles: buyer, seller, admin, etc.)
       dispatch(setUser(data.user));
+
+      // Sync guest cart with database cart for buyers
+      if (userRole === 'user') {
+        const guestCart = guestCartUtils.getCart();
+        if (guestCart.items.length > 0) {
+          try {
+            await cartApi.syncCart(guestCart.items);
+            guestCartUtils.clearCart();
+            toast.success('Cart synced successfully');
+          } catch (error) {
+            console.error('Failed to sync cart:', error);
+            // Don't show error to user, cart sync is not critical
+          }
+        }
+      }
 
       // Role-based redirect
       if (userRole === 'seller') {
@@ -130,11 +148,33 @@ export default function AuthPage() {
     mutationFn: authApi.resendOtp,
     onSuccess: (data) => {
       toast.success(data.message || 'OTP resent successfully');
+      startCountdown();
     },
     onError: (error: any) => {
       toast.error(error || 'Failed to resend OTP');
     },
   });
+
+  const startCountdown = () => {
+    setResendDisabled(true);
+    setCountdown(30);
+    const interval = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          setResendDisabled(false);
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  useEffect(() => {
+    if (step === 'otp') {
+      startCountdown();
+    }
+  }, [step]);
 
   const handleEmailSubmit = (data: EmailForm) => {
     setEmail(data.email);
@@ -188,7 +228,11 @@ export default function AuthPage() {
                   </p>
                 )}
               </div>
-              <Button type="submit" className="w-full" disabled={sendOtpMutation.isPending}>
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={!emailForm.watch('email') || sendOtpMutation.isPending}
+              >
                 {sendOtpMutation.isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -238,7 +282,7 @@ export default function AuthPage() {
                 variant="ghost"
                 className="w-full"
                 onClick={handleResendOtp}
-                disabled={resendOtpMutation.isPending}
+                disabled={resendDisabled || resendOtpMutation.isPending}
               >
                 {resendOtpMutation.isPending ? (
                   <>
@@ -246,7 +290,7 @@ export default function AuthPage() {
                     Resending...
                   </>
                 ) : (
-                  'Resend OTP'
+                  `Resend OTP${countdown > 0 ? ` (${countdown}s)` : ''}`
                 )}
               </Button>
             </form>

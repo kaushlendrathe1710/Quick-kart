@@ -1,6 +1,22 @@
 import apiClient from '../apiClient';
 import type { Product, PaginatedProductsResponse, ListProductsInput } from '@shared/types';
 
+// Extended product type with variants for details page
+export interface ProductWithVariants extends Product {
+  variants?: Array<{
+    id: number;
+    productId: number;
+    sku?: string | null;
+    color?: string | null;
+    size?: string | null;
+    price: number;
+    mrp?: number | null;
+    stock: number;
+    images?: string | null;
+    createdAt: Date;
+  }>;
+}
+
 /**
  * Products API - Public product browsing
  */
@@ -20,7 +36,7 @@ export const productsApi = {
   /**
    * Get single product by ID
    */
-  getProductById: async (id: number): Promise<Product> => {
+  getProductById: async (id: number): Promise<ProductWithVariants> => {
     const response = await apiClient.get(`/products/${id}`);
     return response.data.data; // Unwrap nested data structure
   },

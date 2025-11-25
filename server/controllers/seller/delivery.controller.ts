@@ -9,6 +9,55 @@ import { deliveryService } from '@server/db/services';
  */
 export class SellerDeliveryController {
   /**
+   * Get all deliveries for seller
+   * GET /api/seller/deliveries
+   */
+  static async getSellerDeliveries(req: AuthenticatedRequest, res: Response) {
+    try {
+      const sellerId = req.user?.id;
+      if (!sellerId) {
+        return res.status(401).json({
+          success: false,
+          message: 'Authentication required',
+        });
+      }
+
+      const page = parseInt(req.query.page as string) || 1;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const status = req.query.status as string | undefined;
+      const offset = (page - 1) * limit;
+
+      const { data, total } = await deliveryService.getDeliveriesBySellerId(sellerId, {
+        limit,
+        offset,
+        status,
+      });
+
+      const totalPages = Math.ceil(total / limit);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Deliveries retrieved successfully',
+        data,
+        pagination: {
+          page,
+          limit,
+          totalCount: total,
+          totalPages,
+          hasNextPage: page < totalPages,
+          hasPreviousPage: page > 1,
+        },
+      });
+    } catch (error) {
+      console.error('Get seller deliveries error:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to retrieve deliveries',
+      });
+    }
+  }
+
+  /**
    * Get delivery by order ID
    * GET /api/seller/delivery/order/:orderId
    */
