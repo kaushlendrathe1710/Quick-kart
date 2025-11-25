@@ -199,10 +199,14 @@ export async function getOrderById(
   orderId: number,
   userId: number
 ): Promise<OrderWithItems | null> {
-  // Get order
+  // Get order with address details
   const order = await db
-    .select()
+    .select({
+      order: orders,
+      address: addresses,
+    })
     .from(orders)
+    .leftJoin(addresses, eq(orders.addressId, addresses.id))
     .where(and(eq(orders.id, orderId), eq(orders.userId, userId)))
     .limit(1);
 
@@ -210,12 +214,26 @@ export async function getOrderById(
     return null;
   }
 
-  // Get order items
-  const items = await db.select().from(orderItems).where(eq(orderItems.orderId, orderId));
+  // Get order items with product details
+  const items = await db
+    .select({
+      orderItem: orderItems,
+      product: products,
+    })
+    .from(orderItems)
+    .leftJoin(products, eq(orderItems.productId, products.id))
+    .where(eq(orderItems.orderId, orderId));
+
+  // Transform items to include product information
+  const itemsWithProducts = items.map((item) => ({
+    ...item.orderItem,
+    product: item.product,
+  }));
 
   return {
-    ...order[0],
-    items,
+    ...order[0].order,
+    address: order[0].address,
+    items: itemsWithProducts,
   };
 }
 

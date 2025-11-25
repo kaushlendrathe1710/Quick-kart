@@ -190,27 +190,38 @@ export default function OrderDetailsPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <p className="text-gray-600">
-                    Order items details will be loaded from order items API.
-                  </p>
-                  {/* {order.items?.map((item: any) => (
-                    <div key={item.id} className="flex gap-4">
-                      <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
-                        <img
-                          src={item.product?.thumbnail || '/placeholder-product.png'}
-                          alt={item.product?.name}
-                          className="h-full w-full object-cover"
-                        />
+                  {order.items && order.items.length > 0 ? (
+                    order.items.map((item: any) => (
+                      <div
+                        key={item.id}
+                        className="flex gap-4 border-b pb-4 last:border-b-0 last:pb-0"
+                      >
+                        <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
+                          <img
+                            src={item.product?.thumbnail || '/placeholder-product.png'}
+                            alt={item.product?.name || 'Product'}
+                            className="h-full w-full object-cover"
+                          />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold">{item.product?.name || 'Product'}</h4>
+                          <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
+                          <div className="mt-1 flex items-center justify-between">
+                            <p className="font-semibold">
+                              ₹{parseFloat(item.finalPrice || item.price).toFixed(2)}
+                            </p>
+                            {item.product?.price && (
+                              <p className="text-sm text-gray-500">
+                                Unit Price: ₹{parseFloat(item.price).toFixed(2)}
+                              </p>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex-1">
-                        <h4 className="font-semibold">{item.product?.name}</h4>
-                        <p className="text-sm text-gray-600">Quantity: {item.quantity}</p>
-                        <p className="mt-1 font-semibold">
-                          ₹{parseFloat(item.finalPrice || item.price).toFixed(2)}
-                        </p>
-                      </div>
-                    </div>
-                  ))} */}
+                    ))
+                  ) : (
+                    <p className="text-gray-600">No items found for this order.</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -224,12 +235,37 @@ export default function OrderDetailsPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="rounded-lg bg-gray-50 p-4">
-                  <p className="text-gray-600">Address ID: {order.addressId}</p>
-                  <p className="mt-2 text-sm text-gray-500">
-                    Full address details will be loaded from address API.
-                  </p>
-                </div>
+                {order.address ? (
+                  <div className="space-y-2 rounded-lg bg-gray-50 p-4">
+                    <div className="flex items-start justify-between">
+                      <p className="font-semibold text-gray-900">
+                        {order.address.addressType?.toUpperCase()}
+                      </p>
+                      {order.address.isDefault && (
+                        <Badge variant="secondary" className="text-xs">
+                          Default
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-gray-700">{order.address.addressLine}</p>
+                    {order.address.landmark && (
+                      <p className="text-sm text-gray-600">Landmark: {order.address.landmark}</p>
+                    )}
+                    <p className="text-gray-700">
+                      {order.address.city}, {order.address.state} - {order.address.postalCode}
+                    </p>
+                    <p className="text-gray-700">{order.address.country}</p>
+                    {order.address.contactNumber && (
+                      <p className="text-sm text-gray-600">
+                        Contact: {order.address.contactNumber}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="rounded-lg bg-gray-50 p-4">
+                    <p className="text-gray-600">Address information not available</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
