@@ -16,6 +16,9 @@ export function registerCartRoutes(app: Express): void {
   // Add product to cart
   app.post('/api/cart', authenticate, CartController.addToCart);
 
+  // Sync guest cart with database cart
+  app.post('/api/cart/sync', authenticate, CartController.syncCart);
+
   // Update cart item quantity
   app.patch('/api/cart/:productId', authenticate, CartController.updateCartItem);
 

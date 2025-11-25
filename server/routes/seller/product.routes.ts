@@ -44,6 +44,18 @@ export function registerSellerProductRoutes(app: Application) {
   app.put('/api/seller/products/:id', ...middleware, SellerProductController.updateProduct);
 
   /**
+   * @route   PATCH /api/seller/products/:id/stock
+   * @desc    Update product stock only
+   * @access  Private (Seller - Approved)
+   * @body    { stock: number }
+   */
+  app.patch(
+    '/api/seller/products/:id/stock',
+    ...middleware,
+    SellerProductController.updateProductStock
+  );
+
+  /**
    * @route   DELETE /api/seller/products/:id
    * @desc    Soft delete product
    * @access  Private (Seller - Approved)

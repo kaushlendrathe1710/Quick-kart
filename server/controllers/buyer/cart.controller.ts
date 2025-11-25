@@ -9,6 +9,7 @@ import {
   removeFromCart,
   clearCart,
   getCartItemsCount,
+  mergeGuestCart,
 } from '@server/db/services/cart.service';
 
 /**
@@ -51,7 +52,7 @@ export class CartController {
       const userId = req.user?.id!;
       const data = addToCartSchema.parse(req.body);
 
-      await addToCart(userId, data.productId, data.quantity);
+      await addToCart(userId, data.productId, data.quantity, data.variantId);
 
       // Get updated cart
       const cart = await getUserCart(userId);
@@ -201,6 +202,43 @@ export class CartController {
       return res.status(500).json({
         success: false,
         message: 'Failed to get cart count',
+        error: error instanceof Error ? error.message : 'Unknown error',
+      });
+    }
+  }
+
+  /**
+   * Sync guest cart with database cart (merge items intelligently)
+   * POST /api/cart/sync
+   */
+  static async syncCart(req: AuthenticatedRequest, res: Response) {
+    try {
+      const userId = req.user?.id!;
+      const { items } = req.body;
+
+      if (!Array.isArray(items)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid request: items must be an array',
+        });
+      }
+
+      // Use the mergeGuestCart service function
+      await mergeGuestCart(userId, items);
+
+      // Get updated cart
+      const cart = await getUserCart(userId);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Cart synced successfully',
+        data: cart,
+      });
+    } catch (error) {
+      console.error('Error syncing cart:', error);
+      return res.status(500).json({
+        success: false,
+        message: 'Failed to sync cart',
         error: error instanceof Error ? error.message : 'Unknown error',
       });
     }

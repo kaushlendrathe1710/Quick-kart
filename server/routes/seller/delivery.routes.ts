@@ -10,6 +10,9 @@ import { createDeliverySchema, idParamSchema } from '../../utils/deliveryPartner
  * All routes require authentication as seller
  */
 export function registerSellerDeliveryRoutes(app: Express): void {
+  // Get all deliveries for seller
+  app.get('/api/seller/deliveries', authenticate, SellerDeliveryController.getSellerDeliveries);
+
   // Get delivery by order ID
   app.get(
     '/api/seller/delivery/order/:orderId',

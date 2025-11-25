@@ -2,14 +2,16 @@ import { Link } from 'wouter';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import type { Product } from '@shared/types';
-import { cartApi, wishlistApi } from '@/api/buyer';
-import { cartKeys, wishlistKeys } from '@/constants/buyer';
+import { cartApi } from '@/api/buyer';
+import { cartKeys } from '@/constants/buyer';
 import { useAppSelector } from '@/store/hooks';
+import { guestCartUtils } from '@/utils/guestCart';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { Heart, ShoppingCart, Star } from 'lucide-react';
+import { ShoppingCart, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { HeartButton } from './HeartButton';
 
 /**
  * Product Card Component - Displays product information
@@ -24,50 +26,36 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   // Add to cart mutation
   const addToCartMutation = useMutation({
-    mutationFn: () => cartApi.addToCart({ productId: product.id, quantity: 1 }),
+    mutationFn: () => {
+      if (isAuthenticated) {
+        return cartApi.addToCart({ productId: product.id, quantity: 1 });
+      } else {
+        guestCartUtils.addItem(product.id, 1);
+        return Promise.resolve({ success: true, message: 'Added to cart' });
+      }
+    },
     onSuccess: () => {
       toast.success('Added to cart');
-      queryClient.invalidateQueries({ queryKey: cartKeys.all });
+      if (isAuthenticated) {
+        queryClient.invalidateQueries({ queryKey: cartKeys.all });
+      }
     },
     onError: (error: any) => {
       toast.error(error || 'Failed to add to cart');
     },
   });
 
-  // Add to wishlist mutation
-  const addToWishlistMutation = useMutation({
-    mutationFn: () => wishlistApi.addToWishlist({ productId: product.id }),
-    onSuccess: () => {
-      toast.success('Added to wishlist');
-      queryClient.invalidateQueries({ queryKey: wishlistKeys.all });
-    },
-    onError: (error: any) => {
-      toast.error(error || 'Failed to add to wishlist');
-    },
-  });
-
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault();
-    if (!isAuthenticated) {
-      toast.error('Please login to add items to cart');
-      return;
-    }
     addToCartMutation.mutate();
-  };
-
-  const handleToggleWishlist = (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (!isAuthenticated) {
-      toast.error('Please login to add items to wishlist');
-      return;
-    }
-    addToWishlistMutation.mutate();
   };
 
   // Calculate discount percentage from MRP
   const mrp = product.mrp || product.price;
   const price = typeof product.price === 'string' ? parseFloat(product.price) : product.price;
-  const discount = mrp > price ? ((mrp - price) / mrp) * 100 : 0;
+  const discount =
+    mrp > product.price ? Math.round(((mrp - product.price) / mrp) * 100 * 100) / 100 : 0;
+
   const finalPrice = price;
 
   // Get image URL - handle both single thumbnail and array of images
@@ -89,14 +77,12 @@ export default function ProductCard({ product }: ProductCardProps) {
             {discount > 0 && (
               <Badge className="absolute left-2 top-2 bg-red-500">{discount}% OFF</Badge>
             )}
-            <Button
-              variant="secondary"
-              size="icon"
-              className="absolute right-2 top-2 opacity-0 transition-opacity group-hover:opacity-100"
-              onClick={handleToggleWishlist}
-            >
-              <Heart className="h-4 w-4" />
-            </Button>
+            <HeartButton
+              productId={product.id}
+              className="absolute right-2 top-2"
+              showOnHoverOnly={true}
+              iconClassName="h-4 w-4"
+            />
           </div>
           <CardContent className="p-4">
             <h3 className="mb-1 line-clamp-1 font-semibold">{product.name}</h3>
@@ -123,7 +109,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             <div className="mb-3 flex items-center gap-2">
               <span className="text-lg font-bold">₹{finalPrice.toFixed(2)}</span>
               {discount > 0 && (
-                <span className="text-sm text-gray-500 line-through">₹{price.toFixed(2)}</span>
+                <span className="text-sm text-gray-500 line-through">₹{mrp.toFixed(2)}</span>
               )}
             </div>
             {product.stock && product.stock > 0 ? (

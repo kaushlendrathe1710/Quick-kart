@@ -1,10 +1,13 @@
 import { Link, useLocation } from 'wouter';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { useState, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { clearUser } from '@/store/slices/authSlice';
-import { cartApi, wishlistApi, authApi } from '@/api/buyer';
-import { cartKeys, wishlistKeys } from '@/constants/buyer';
+import { cartApi, authApi } from '@/api/buyer';
+import { cartKeys } from '@/constants/buyer';
+import { useWishlist } from '@/hooks/buyer';
+import { guestCartUtils } from '@/utils/guestCart';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -25,20 +28,37 @@ export default function Navigation() {
   const [location, setLocation] = useLocation();
   const dispatch = useAppDispatch();
   const { currentUser, isAuthenticated } = useAppSelector((state) => state.auth);
+  const { wishlistCount } = useWishlist();
+  const [guestCartCount, setGuestCartCount] = useState(0);
 
-  // Fetch cart count
+  // Fetch cart count for authenticated users
   const { data: cartCount } = useQuery({
     queryKey: cartKeys.count(),
     queryFn: cartApi.getCartCount,
     enabled: isAuthenticated,
   });
 
-  // Fetch wishlist count
-  const { data: wishlistCount } = useQuery({
-    queryKey: wishlistKeys.count(),
-    queryFn: wishlistApi.getWishlistCount,
-    enabled: isAuthenticated,
-  });
+  // Update guest cart count from localStorage
+  useEffect(() => {
+    if (!isAuthenticated) {
+      const updateGuestCount = () => {
+        setGuestCartCount(guestCartUtils.getCartCount());
+      };
+
+      updateGuestCount();
+
+      // Listen for storage events (cart changes in other tabs)
+      window.addEventListener('storage', updateGuestCount);
+
+      // Custom event for same-tab cart updates
+      window.addEventListener('guestCartUpdated', updateGuestCount);
+
+      return () => {
+        window.removeEventListener('storage', updateGuestCount);
+        window.removeEventListener('guestCartUpdated', updateGuestCount);
+      };
+    }
+  }, [isAuthenticated]);
 
   // Logout mutation
   const logoutMutation = useMutation({
@@ -92,9 +112,9 @@ export default function Navigation() {
               className="relative"
             >
               <Heart className="h-5 w-5" />
-              {wishlistCount && wishlistCount.count > 0 && (
+              {wishlistCount > 0 && (
                 <Badge className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full text-xs">
-                  {wishlistCount.count}
+                  {wishlistCount}
                 </Badge>
               )}
             </Button>
@@ -108,9 +128,10 @@ export default function Navigation() {
             className="relative"
           >
             <ShoppingCart className="h-5 w-5" />
-            {cartCount && cartCount.count > 0 && (
+            {((isAuthenticated && cartCount && cartCount.count > 0) ||
+              (!isAuthenticated && guestCartCount > 0)) && (
               <Badge className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full text-xs">
-                {cartCount.count}
+                {isAuthenticated ? cartCount?.count || 0 : guestCartCount}
               </Badge>
             )}
           </Button>

@@ -1,29 +1,91 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { SellerLayout } from '@/components/seller/navigation/SellerLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
-import { Settings as SettingsIcon, Bell, Store, Mail, Package } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Settings as SettingsIcon, Bell, Package, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { getSettings, updateSettings, type SellerSettings } from '@/api/seller/settings';
 
 export default function Settings() {
-  const [settings, setSettings] = useState({
-    emailNotifications: true,
-    orderNotifications: true,
-    lowStockAlerts: true,
-    promotionalEmails: false,
-    taxEnabled: true,
-  });
+  const [settings, setSettings] = useState<SellerSettings | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
 
-  const handleToggle = (key: keyof typeof settings) => {
-    setSettings((prev) => ({ ...prev, [key]: !prev[key] }));
+  useEffect(() => {
+    loadSettings();
+  }, []);
+
+  const loadSettings = async () => {
+    try {
+      setLoading(true);
+      const response = await getSettings();
+      setSettings(response.data);
+    } catch (error) {
+      console.error('Error loading settings:', error);
+      toast.error('Failed to load settings');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleSave = () => {
-    // TODO: Implement save settings API call
-    toast.success('Settings saved successfully');
+  const handleToggle = (key: keyof SellerSettings) => {
+    if (settings) {
+      setSettings((prev) => (prev ? { ...prev, [key]: !prev[key] } : null));
+    }
   };
+
+  const handleSave = async () => {
+    if (!settings) return;
+
+    try {
+      setSaving(true);
+      await updateSettings({
+        emailNotifications: settings.emailNotifications,
+        orderNotifications: settings.orderNotifications,
+        lowStockAlerts: settings.lowStockAlerts,
+        taxEnabled: settings.taxEnabled,
+      });
+      toast.success('Settings saved successfully');
+    } catch (error) {
+      console.error('Error saving settings:', error);
+      toast.error('Failed to save settings');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <SellerLayout>
+        <div className="space-y-6">
+          <Skeleton className="h-8 w-48" />
+          <Skeleton className="h-4 w-64" />
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-6 w-32" />
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <Skeleton className="h-12 w-full" />
+              <Skeleton className="h-12 w-full" />
+            </CardContent>
+          </Card>
+        </div>
+      </SellerLayout>
+    );
+  }
+
+  if (!settings) {
+    return (
+      <SellerLayout>
+        <div className="py-8 text-center">
+          <p className="text-muted-foreground">Failed to load settings</p>
+        </div>
+      </SellerLayout>
+    );
+  }
 
   return (
     <SellerLayout>
@@ -82,37 +144,24 @@ export default function Settings() {
                 onCheckedChange={() => handleToggle('lowStockAlerts')}
               />
             </div>
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Promotional Emails</Label>
-                <p className="text-sm text-muted-foreground">
-                  Receive marketing and promotional emails
-                </p>
-              </div>
-              <Switch
-                checked={settings.promotionalEmails}
-                onCheckedChange={() => handleToggle('promotionalEmails')}
-              />
-            </div>
           </CardContent>
         </Card>
 
-        {/* Store Settings */}
+        {/* Tax Settings */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Store className="h-5 w-5" />
-              Store Settings
+              <Package className="h-5 w-5" />
+              Tax Settings
             </CardTitle>
-            <CardDescription>Configure your store preferences</CardDescription>
+            <CardDescription>Configure tax calculation preferences</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label>Enable Tax Calculation</Label>
+                <Label>Tax Calculation</Label>
                 <p className="text-sm text-muted-foreground">
-                  Automatically calculate and add taxes to orders
+                  Enable automatic tax calculation for orders
                 </p>
               </div>
               <Switch
@@ -125,13 +174,21 @@ export default function Settings() {
 
         {/* Save Button */}
         <div className="flex justify-end">
-          <Button onClick={handleSave}>
-            <SettingsIcon className="mr-2 h-4 w-4" />
-            Save Settings
+          <Button onClick={handleSave} disabled={saving} size="lg">
+            {saving ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <SettingsIcon className="mr-2 h-4 w-4" />
+                Save Changes
+              </>
+            )}
           </Button>
         </div>
       </div>
     </SellerLayout>
   );
 }
-

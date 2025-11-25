@@ -127,6 +127,31 @@ export const profileImageUpload = multer({
   },
 });
 
+// Configure multer for store branding images (logo and banner)
+export const storeImageUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      const uploadPath = path.join(process.cwd(), 'uploads', 'store');
+      fs.mkdirSync(uploadPath, { recursive: true });
+      cb(null, uploadPath);
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+      cb(null, 'store-' + uniqueSuffix + path.extname(file.originalname));
+    },
+  }),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit for store images
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image files are allowed'));
+    }
+  },
+});
+
 // Configure multer for delivery partner documents
 export const documentUpload = multer({
   storage: multer.diskStorage({

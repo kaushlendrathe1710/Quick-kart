@@ -100,6 +100,55 @@ export async function getDeliveriesByStatus(
 }
 
 /**
+ * Get deliveries by seller ID (via orders table join)
+ */
+export async function getDeliveriesBySellerId(
+  sellerId: number,
+  options?: {
+    limit?: number;
+    offset?: number;
+    status?: string;
+  }
+): Promise<{ data: Delivery[]; total: number }> {
+  const { orders } = await import('@server/db/schema');
+
+  let whereConditions = [eq(orders.sellerId, sellerId)];
+
+  if (options?.status) {
+    whereConditions.push(eq(deliveries.status, options.status as any));
+  }
+
+  const query = db
+    .select()
+    .from(deliveries)
+    .innerJoin(orders, eq(deliveries.orderId, orders.id))
+    .where(and(...whereConditions))
+    .orderBy(desc(deliveries.createdAt));
+
+  if (options?.limit) {
+    query.limit(options.limit);
+  }
+  if (options?.offset) {
+    query.offset(options.offset);
+  }
+
+  const results = await query;
+  const data = results.map((row) => row.deliveries);
+
+  // Get total count
+  const totalResult = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(deliveries)
+    .innerJoin(orders, eq(deliveries.orderId, orders.id))
+    .where(and(...whereConditions));
+
+  return {
+    data,
+    total: Number(totalResult[0]?.count || 0),
+  };
+}
+
+/**
  * Create delivery
  */
 export async function createDelivery(data: NewDelivery): Promise<Delivery> {
@@ -222,6 +271,7 @@ export const deliveryService = {
   getDeliveriesByPartnerId,
   getDeliveriesByBuyerId,
   getDeliveriesByStatus,
+  getDeliveriesBySellerId,
   createDelivery,
   updateDelivery,
   assignDelivery,

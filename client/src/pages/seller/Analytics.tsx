@@ -2,14 +2,14 @@ import { SellerLayout } from '@/components/seller/navigation/SellerLayout';
 import { useSellerDashboard } from '@/hooks/seller';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  DollarSign, 
-  ShoppingCart, 
-  Package, 
+import {
+  TrendingUp,
+  TrendingDown,
+  DollarSign,
+  ShoppingCart,
+  Package,
   Users,
-  BarChart3 
+  BarChart3,
 } from 'lucide-react';
 
 export default function Analytics() {
@@ -33,23 +33,26 @@ export default function Analytics() {
     ? [
         {
           title: 'Total Revenue',
-          value: formatCurrency(analytics.totalRevenue),
-          change: calculateChange(analytics.totalRevenue, analytics.previousPeriodRevenue || 0),
+          value: formatCurrency(analytics.totalRevenue || 0),
+          change: calculateChange(
+            analytics.totalRevenue || 0,
+            analytics.previousPeriodRevenue || 0
+          ),
           icon: DollarSign,
           color: 'text-green-600',
         },
         {
           title: 'Total Orders',
-          value: analytics.totalOrders.toString(),
-          change: calculateChange(analytics.totalOrders, analytics.previousPeriodOrders || 0),
+          value: (analytics.totalOrders || 0).toString(),
+          change: calculateChange(analytics.totalOrders || 0, analytics.previousPeriodOrders || 0),
           icon: ShoppingCart,
           color: 'text-blue-600',
         },
         {
           title: 'Products Sold',
-          value: analytics.totalProductsSold.toString(),
+          value: (analytics.totalProductsSold || analytics.totalProducts || 0).toString(),
           change: calculateChange(
-            analytics.totalProductsSold,
+            analytics.totalProductsSold || analytics.totalProducts || 0,
             analytics.previousPeriodProductsSold || 0
           ),
           icon: Package,
@@ -57,7 +60,7 @@ export default function Analytics() {
         },
         {
           title: 'Avg Order Value',
-          value: formatCurrency(analytics.averageOrderValue),
+          value: formatCurrency(analytics.averageOrderValue || 0),
           change: 0,
           icon: TrendingUp,
           color: 'text-orange-600',
@@ -134,33 +137,39 @@ export default function Analytics() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {Object.entries(analytics.ordersByStatus).map(([status, count]) => (
-                  <div key={status} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className={`h-3 w-3 rounded-full ${
-                          status === 'delivered'
-                            ? 'bg-green-500'
-                            : status === 'cancelled'
-                            ? 'bg-red-500'
-                            : status === 'shipped'
-                            ? 'bg-blue-500'
-                            : 'bg-yellow-500'
-                        }`}
-                      />
-                      <span className="capitalize">{status}</span>
+                {analytics.ordersByStatus && analytics.ordersByStatus.length > 0 ? (
+                  analytics.ordersByStatus.map((item) => (
+                    <div key={item.status} className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`h-3 w-3 rounded-full ${
+                            item.status === 'delivered'
+                              ? 'bg-green-500'
+                              : item.status === 'cancelled'
+                                ? 'bg-red-500'
+                                : item.status === 'shipped'
+                                  ? 'bg-blue-500'
+                                  : 'bg-yellow-500'
+                          }`}
+                        />
+                        <span className="capitalize">{item.status}</span>
+                      </div>
+                      <div className="flex items-center gap-4">
+                        <span className="text-sm text-muted-foreground">
+                          {analytics.totalOrders > 0
+                            ? ((item.count / analytics.totalOrders) * 100).toFixed(1)
+                            : 0}
+                          %
+                        </span>
+                        <span className="font-semibold">{item.count}</span>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <span className="text-sm text-muted-foreground">
-                        {analytics.totalOrders > 0
-                          ? ((count / analytics.totalOrders) * 100).toFixed(1)
-                          : 0}
-                        %
-                      </span>
-                      <span className="font-semibold">{count}</span>
-                    </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="py-4 text-center text-sm text-muted-foreground">
+                    No order data available
+                  </p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -184,7 +193,9 @@ export default function Analytics() {
                   <>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Total Revenue</span>
-                      <span className="font-semibold">{formatCurrency(analytics.totalRevenue)}</span>
+                      <span className="font-semibold">
+                        {formatCurrency(analytics.totalRevenue)}
+                      </span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-muted-foreground">Average Order Value</span>

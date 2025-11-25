@@ -9,3 +9,5 @@ export { SellerDocumentsController } from './documents.controller';
 export { SellerAnalyticsController } from './analytics.controller';
 export { SellerProductController } from './product.controller';
 export { SellerOrderController } from './order.controller';
+export { SellerSettingsController } from './settings.controller';
+export { SellerStoreController } from './store.controller';

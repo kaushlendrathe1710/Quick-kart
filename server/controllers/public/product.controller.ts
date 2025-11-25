@@ -1,6 +1,10 @@
 import { Request, Response } from 'express';
 import { listProductsSchema, ListProductsInput } from '@shared/types';
-import { listProducts, getProductById } from '@server/db/services/product.service';
+import {
+  listProducts,
+  getProductById,
+  getProductVariants,
+} from '@server/db/services/product.service';
 import { z } from 'zod';
 
 /**
@@ -68,10 +72,16 @@ export class ProductController {
         });
       }
 
+      // Fetch variants for this product
+      const variants = await getProductVariants(productId);
+
       return res.status(200).json({
         success: true,
         message: 'Product retrieved successfully',
-        data: product,
+        data: {
+          ...product,
+          variants: variants,
+        },
       });
     } catch (error) {
       console.error('Error getting product:', error);

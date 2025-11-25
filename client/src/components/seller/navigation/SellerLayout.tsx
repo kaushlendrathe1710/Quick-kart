@@ -1,5 +1,10 @@
 import { ReactNode } from 'react';
 import { Link, useLocation } from 'wouter';
+import { useMutation } from '@tanstack/react-query';
+import { toast } from 'sonner';
+import { useAppDispatch } from '@/store/hooks';
+import { clearUser } from '@/store/slices/authSlice';
+import { authApi } from '@/api/buyer';
 import {
   LayoutDashboard,
   Package,
@@ -82,15 +87,28 @@ const navigationItems = [
 ];
 
 export function SellerLayout({ children }: SellerLayoutProps) {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { data: profileData } = useSellerProfile();
+  const dispatch = useAppDispatch();
 
   const seller = (profileData as any)?.data?.user;
 
+  // Logout mutation
+  const logoutMutation = useMutation({
+    mutationFn: authApi.logout,
+    onSuccess: () => {
+      dispatch(clearUser());
+      toast.success('Logged out successfully');
+      setLocation('/auth');
+    },
+    onError: (error: any) => {
+      toast.error(error || 'Failed to logout');
+    },
+  });
+
   const handleLogout = () => {
-    // Clear auth and redirect to login
-    window.location.href = '/auth';
+    logoutMutation.mutate();
   };
 
   return (

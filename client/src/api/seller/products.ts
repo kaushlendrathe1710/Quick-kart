@@ -235,6 +235,17 @@ export const getProductMedia = async (productId: number): Promise<ProductMediaRe
 };
 
 /**
+ * Update product stock
+ */
+export const updateProductStock = async (
+  productId: number,
+  stock: number
+): Promise<{ success: boolean; message: string; data: Product }> => {
+  const response = await apiClient.patch(`/seller/products/${productId}/stock`, { stock });
+  return response.data;
+};
+
+/**
  * Upload product images
  */
 export const uploadProductImages = async (
