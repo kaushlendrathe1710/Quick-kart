@@ -58,6 +58,7 @@ import { registerCategoryRoutes } from './public/category.routes.js';
 import { registerProductRoutes } from './public/product.routes.js';
 import { registerPublicDeliveryRatingRoutes } from './public/deliveryRating.routes.js';
 import { registerSubcategoryRoutes } from './public/subcategory.routes.js';
+import { registerPublicBannerRoutes } from './public/banner.routes.js';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Health check endpoint
@@ -137,6 +138,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerSubcategoryRoutes(app);
   registerProductRoutes(app);
   registerPublicDeliveryRatingRoutes(app);
+  registerPublicBannerRoutes(app);
 
   // Create and return HTTP server
   return createServer(app);

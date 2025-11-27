@@ -1,5 +1,6 @@
 import { Express } from 'express';
 import { authenticate, isAdmin } from '../../middleware/auth.middleware';
+import { bannerImageUpload } from '../../config/multer';
 import * as bannerController from '../../controllers/admin/banner.controller';
 
 export function registerAdminBannerRoutes(app: Express) {
@@ -19,5 +20,14 @@ export function registerAdminBannerRoutes(app: Express) {
     authenticate,
     isAdmin,
     bannerController.toggleBannerActive
+  );
+
+  // Banner Image Upload
+  app.post(
+    '/api/admin/banners/upload-image',
+    authenticate,
+    isAdmin,
+    bannerImageUpload.single('image'),
+    bannerController.uploadBannerImage
   );
 }

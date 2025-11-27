@@ -2,9 +2,11 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'wouter';
 import apiClient from '@/api/apiClient';
 import { productsApi } from '@/api/buyer';
+import { getActiveBanners } from '@/api/public/banners';
 import { productKeys, categoryKeys } from '@/constants/buyer';
 import Layout from '@/components/buyer/Layout';
 import ProductCard from '@/components/buyer/product/ProductCard';
+import BannerCarousel from '@/components/buyer/home/BannerCarousel';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ArrowRight, TrendingUp, Package } from 'lucide-react';
@@ -15,6 +17,12 @@ import type { Product, PaginatedProductsResponse, Category } from '@shared/types
  * Features: Hero section, featured products, categories, new arrivals
  */
 export default function HomePage() {
+  // Fetch banners
+  const { data: bannersData, isLoading: isLoadingBanners } = useQuery({
+    queryKey: ['active-banners'],
+    queryFn: getActiveBanners,
+  });
+
   // Fetch featured products
   const { data: featuredProducts, isLoading: isLoadingFeatured } = useQuery({
     queryKey: productKeys.list({ featured: true }),
@@ -54,25 +62,14 @@ export default function HomePage() {
 
   return (
     <Layout>
-      {/* Hero Section */}
-      <section className="bg-gradient-to-r from-[hsl(var(--primary))] to-[hsl(var(--primary)/0.8)] text-primary-foreground">
-        <div className="container mx-auto px-4 py-20">
-          <div className="max-w-2xl">
-            <h1 className="mb-4 text-5xl font-bold">Welcome to Quick-kart</h1>
-            <p className="mb-8 text-xl">
-              Discover amazing products at unbeatable prices. Shop with confidence.
-            </p>
-            <div className="flex gap-4">
-              <Link href="/products">
-                <Button size="lg" variant="secondary">
-                  Shop Now
-                  <ArrowRight className="ml-2 h-5 w-5" />
-                </Button>
-              </Link>
-            </div>
-          </div>
+      {/* Hero Section - Banner Carousel */}
+      {isLoadingBanners ? (
+        <div className="h-[400px] w-full md:h-[500px]">
+          <Skeleton className="h-full w-full" />
         </div>
-      </section>
+      ) : (
+        <BannerCarousel banners={bannersData?.data || []} />
+      )}
 
       {/* Categories Section */}
       <section className="container mx-auto px-4 py-12">

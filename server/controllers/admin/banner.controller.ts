@@ -2,6 +2,7 @@ import { Response } from 'express';
 import { AuthenticatedRequest } from '../../types';
 import * as bannerService from '../../db/services/banner.service';
 import { getPaginationParams, createPaginatedResponse } from '../../utils/pagination.utils';
+import { uploadWithPath, UPLOAD_PATHS } from '../../utils/s3.utils';
 
 /**
  * Get all banners with pagination
@@ -155,5 +156,34 @@ export async function toggleBannerActive(req: AuthenticatedRequest, res: Respons
   } catch (error) {
     console.error('Error toggling banner status:', error);
     res.status(500).json({ error: 'Failed to toggle banner status' });
+  }
+}
+
+/**
+ * Upload banner image
+ * POST /api/admin/banners/upload-image
+ */
+export async function uploadBannerImage(req: AuthenticatedRequest, res: Response) {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No image file uploaded' });
+    }
+
+    // Upload to S3 using the public banners path
+    const imageUrl = await uploadWithPath({
+      file: req.file,
+      uploadPath: UPLOAD_PATHS.BANNER(),
+      allowedMimeTypes: ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'],
+      maxFileSize: 10 * 1024 * 1024, // 10MB
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Banner image uploaded successfully',
+      imageUrl,
+    });
+  } catch (error) {
+    console.error('Error uploading banner image:', error);
+    res.status(500).json({ error: 'Failed to upload banner image' });
   }
 }

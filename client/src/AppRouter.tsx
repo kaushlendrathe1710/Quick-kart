@@ -2,6 +2,7 @@ import { Route, Switch } from 'wouter';
 import {
   BuyerRoute,
   SellerRoute,
+  AdminRoute,
   PublicRoute,
   AuthRedirect,
 } from './components/common/RouteGuards';
@@ -31,6 +32,12 @@ import SellerProfilePage from './pages/seller/Profile';
 import SellerSettingsPage from './pages/seller/Settings';
 import SellerStorePage from './pages/seller/Store';
 import SellerDeliveriesPage from './pages/seller/Deliveries';
+
+// Admin Pages
+import AdminDashboardPage from './pages/admin/Dashboard';
+import AdminTicketsPage from './pages/admin/Tickets';
+import AdminPayoutsPage from './pages/admin/Payouts';
+import AdminBannersPage from './pages/admin/Banners';
 
 // Common Pages
 import NotFoundPage from './pages/common/NotFoundPage';
@@ -157,6 +164,28 @@ export default function AppRouter() {
         <SellerRoute requireApproval={false}>
           <SellerSettingsPage />
         </SellerRoute>
+      </Route>
+
+      {/* Admin Routes - Protected */}
+      <Route path="/admin/dashboard">
+        <AdminRoute>
+          <AdminDashboardPage />
+        </AdminRoute>
+      </Route>
+      <Route path="/admin/tickets">
+        <AdminRoute>
+          <AdminTicketsPage />
+        </AdminRoute>
+      </Route>
+      <Route path="/admin/payouts">
+        <AdminRoute>
+          <AdminPayoutsPage />
+        </AdminRoute>
+      </Route>
+      <Route path="/admin/banners">
+        <AdminRoute>
+          <AdminBannersPage />
+        </AdminRoute>
       </Route>
 
       {/* 404 */}
