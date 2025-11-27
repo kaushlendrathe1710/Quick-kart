@@ -181,6 +181,33 @@ export const documentUpload = multer({
   },
 });
 
+// Configure multer for banner/promotional image uploads
+export const bannerImageUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      const uploadPath = path.join(process.cwd(), 'uploads', 'banners');
+      fs.mkdirSync(uploadPath, { recursive: true });
+      cb(null, uploadPath);
+    },
+    filename: (req, file, cb) => {
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
+      cb(null, 'banner-' + uniqueSuffix + path.extname(file.originalname));
+    },
+  }),
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit for banners (higher quality)
+    files: 1, // One banner at a time
+  },
+  fileFilter: (req, file, cb) => {
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (allowedTypes.includes(file.mimetype)) {
+      cb(null, true);
+    } else {
+      cb(new Error('Invalid file type. Allowed types: JPG, PNG, WEBP'));
+    }
+  },
+});
+
 // Raw body middleware for chunked uploads
 export const rawBodyMiddleware = (req: Request, res: Response, next: NextFunction) => {
   if (req.headers['content-type'] === 'application/octet-stream') {

@@ -110,6 +110,9 @@ export default function AuthPage() {
       if (userRole === 'seller') {
         toast.success('Welcome to Seller Dashboard!');
         setLocation('/seller/dashboard');
+      } else if (userRole === 'admin') {
+        toast.success('Welcome to Admin Panel!');
+        setLocation('/admin/dashboard');
       } else if (userRole === 'user') {
         // Buyer login
         if (data.requiresProfile) {
@@ -119,7 +122,7 @@ export default function AuthPage() {
           setLocation('/');
         }
       } else {
-        // Other roles (admin, delivery_partner, etc.)
+        // Other roles (delivery_partner, etc.)
         toast.success('Login successful!');
         setLocation('/');
       }

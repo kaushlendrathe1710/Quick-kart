@@ -136,6 +136,39 @@ export function BuyerRoute({ children }: { children: ReactNode }) {
 }
 
 /**
+ * Admin Route Guard
+ * Ensures only authenticated admins can access
+ */
+export function AdminRoute({ children }: { children: ReactNode }) {
+  const [, setLocation] = useLocation();
+  const currentUser = useSelector((state: RootState) => state.auth.currentUser);
+  const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
+
+  useEffect(() => {
+    if (!isAuthenticated || !currentUser) {
+      toast.error('Please login to continue');
+      setLocation('/auth');
+      return;
+    }
+
+    if (currentUser.role !== 'admin') {
+      toast.error('Access denied. Only admins can access this area.');
+      if (currentUser.role === 'seller') {
+        setLocation('/seller/dashboard');
+      } else {
+        setLocation('/');
+      }
+    }
+  }, [currentUser, isAuthenticated, setLocation]);
+
+  if (!isAuthenticated || !currentUser || currentUser.role !== 'admin') {
+    return null;
+  }
+
+  return <>{children}</>;
+}
+
+/**
  * Public Route Component
  * For routes accessible without authentication
  */
@@ -150,6 +183,11 @@ export function PublicRoute({ children }: { children: ReactNode }) {
 export function AuthRedirect() {
   const currentUser = useSelector((state: RootState) => state.auth.currentUser);
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
+
+  // Redirect admins to admin dashboard
+  if (isAuthenticated && currentUser?.role === 'admin') {
+    return <Redirect to="/admin/dashboard" />;
+  }
 
   // Redirect sellers to dashboard
   if (isAuthenticated && currentUser?.role === 'seller') {
