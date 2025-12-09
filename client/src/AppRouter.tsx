@@ -32,12 +32,20 @@ import SellerProfilePage from './pages/seller/Profile';
 import SellerSettingsPage from './pages/seller/Settings';
 import SellerStorePage from './pages/seller/Store';
 import SellerDeliveriesPage from './pages/seller/Deliveries';
+import SellerApplicationPage from './pages/seller/Application';
+import SellerWalletPage from './pages/seller/SellerWalletPage';
+
+// Delivery Partner Pages
+import DeliveryPartnerAppDownloadPage from './pages/deliveryPartner/AppDownloadPage';
 
 // Admin Pages
 import AdminDashboardPage from './pages/admin/Dashboard';
 import AdminTicketsPage from './pages/admin/Tickets';
 import AdminPayoutsPage from './pages/admin/Payouts';
+import AdminCategoriesPage from './pages/admin/Categories';
 import AdminBannersPage from './pages/admin/Banners';
+import AdminApplicationsPage from './pages/admin/Applications';
+import AdminWithdrawalsPage from './pages/admin/AdminWithdrawalsPage';
 
 // Common Pages
 import NotFoundPage from './pages/common/NotFoundPage';
@@ -165,6 +173,23 @@ export default function AppRouter() {
           <SellerSettingsPage />
         </SellerRoute>
       </Route>
+      <Route path="/seller/application">
+        <SellerRoute requireApproval={false}>
+          <SellerApplicationPage />
+        </SellerRoute>
+      </Route>
+      <Route path="/seller/wallet">
+        <SellerRoute>
+          <SellerWalletPage />
+        </SellerRoute>
+      </Route>
+
+      {/* Delivery Partner Routes */}
+      <Route path="/delivery-partner/app-download">
+        <PublicRoute>
+          <DeliveryPartnerAppDownloadPage />
+        </PublicRoute>
+      </Route>
 
       {/* Admin Routes - Protected */}
       <Route path="/admin/dashboard">
@@ -182,9 +207,24 @@ export default function AppRouter() {
           <AdminPayoutsPage />
         </AdminRoute>
       </Route>
+      <Route path="/admin/categories">
+        <AdminRoute>
+          <AdminCategoriesPage />
+        </AdminRoute>
+      </Route>
       <Route path="/admin/banners">
         <AdminRoute>
           <AdminBannersPage />
+        </AdminRoute>
+      </Route>
+      <Route path="/admin/applications">
+        <AdminRoute>
+          <AdminApplicationsPage />
+        </AdminRoute>
+      </Route>
+      <Route path="/admin/withdrawals">
+        <AdminRoute>
+          <AdminWithdrawalsPage />
         </AdminRoute>
       </Route>
 

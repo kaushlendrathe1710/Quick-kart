@@ -16,6 +16,9 @@ import {
   X,
   Shield,
   Image,
+  FolderTree,
+  FileText,
+  DollarSign,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -56,9 +59,24 @@ const navigationItems = [
     icon: Wallet,
   },
   {
+    label: 'Withdrawals',
+    href: '/admin/withdrawals',
+    icon: DollarSign,
+  },
+  {
+    label: 'Categories',
+    href: '/admin/categories',
+    icon: FolderTree,
+  },
+  {
     label: 'Banners',
     href: '/admin/banners',
     icon: Image,
+  },
+  {
+    label: 'Applications',
+    href: '/admin/applications',
+    icon: FileText,
   },
 ];
 

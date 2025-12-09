@@ -1,7 +1,9 @@
 import { ReactNode } from 'react';
+import { Link } from 'wouter';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertCircle, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { AlertCircle, CheckCircle, Clock, XCircle, FileText } from 'lucide-react';
 import { useSellerApprovalStatus } from '@/hooks/seller';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -38,9 +40,17 @@ export function ApprovalCheck({ children, showAlways = false }: ApprovalCheckPro
           <Alert variant="default" className="mb-6 border-yellow-200 bg-yellow-50">
             <Clock className="h-4 w-4" />
             <AlertTitle>Account Pending Approval</AlertTitle>
-            <AlertDescription>
-              Your seller account is currently under review. Some features may be restricted until
-              approval is complete.
+            <AlertDescription className="mt-2 space-y-2">
+              <p>
+                Your seller account is currently under review. Some features may be restricted until
+                approval is complete.
+              </p>
+              <Link href="/seller/application">
+                <Button variant="outline" size="sm" className="mt-2">
+                  <FileText className="mr-2 h-4 w-4" />
+                  View Application Status
+                </Button>
+              </Link>
             </AlertDescription>
           </Alert>
         )}

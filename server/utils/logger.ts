@@ -21,3 +21,11 @@ export function logWarning(message: string): void {
   const timestamp = new Date().toISOString();
   console.warn(`[${timestamp}] WARNING: ${message}`);
 }
+
+// Export as logger object for convenience
+export const logger = {
+  log,
+  error: logError,
+  info: logInfo,
+  warn: logWarning,
+};

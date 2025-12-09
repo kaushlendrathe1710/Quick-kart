@@ -54,9 +54,19 @@ export const orders = pgTable('orders', {
   paymentStatus: paymentStatusEnum('payment_status').notNull().default('pending'),
   totalAmount: decimal('total_amount', { precision: 10, scale: 2 }).notNull(),
   discount: decimal('discount', { precision: 10, scale: 2 }).default('0'),
-  shippingCharges: decimal('shipping_charges', { precision: 10, scale: 2 }).default('0'),
+  shippingCharges: decimal('shipping_charges', { precision: 10, scale: 2 }).default('0'), // This is the delivery fee paid to delivery partner
   taxAmount: decimal('tax_amount', { precision: 10, scale: 2 }).default('0'),
   finalAmount: decimal('final_amount', { precision: 10, scale: 2 }).notNull(),
+
+  // Razorpay payment details
+  razorpayOrderId: text('razorpay_order_id'),
+  razorpayPaymentId: text('razorpay_payment_id'),
+  razorpaySignature: text('razorpay_signature'),
+  paymentMethod: text('payment_method'), // 'card', 'upi', 'netbanking', 'wallet', etc.
+
+  // Commission and earnings breakdown (calculated from finalAmount)
+  platformCommission: decimal('platform_commission', { precision: 10, scale: 2 }).default('0'),
+  sellerEarnings: decimal('seller_earnings', { precision: 10, scale: 2 }).default('0'),
 
   // Shipping information
   deliveryPartnerId: integer('delivery_partner_id').references(() => users.id),

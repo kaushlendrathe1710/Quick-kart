@@ -1,21 +1,28 @@
 import type { Express } from 'express';
 import { DeliveryPartnerWalletController } from '../../controllers/deliveryPartner/wallet.controller';
 import { authenticate } from '../../middleware/auth.middleware';
+import { requireDeliveryPartnerApproval } from '../../middleware/deliveryPartnerApproval.middleware';
 import { validateRequest } from '../../middleware/validation.middleware';
 import { applyPayoutSchema } from '../../utils/deliveryPartner.validation';
 
 /**
  * Register delivery partner wallet routes
- * All routes require authentication as delivery partner
+ * All routes require authentication and approval as delivery partner
  */
 export function registerDeliveryPartnerWalletRoutes(app: Express): void {
   // Get current partner's wallet
-  app.get('/api/deliveryPartner/wallet', authenticate, DeliveryPartnerWalletController.getMyWallet);
+  app.get(
+    '/api/deliveryPartner/wallet',
+    authenticate,
+    requireDeliveryPartnerApproval,
+    DeliveryPartnerWalletController.getMyWallet
+  );
 
   // Create wallet
   app.post(
     '/api/deliveryPartner/wallet',
     authenticate,
+    requireDeliveryPartnerApproval,
     DeliveryPartnerWalletController.createWallet
   );
 
@@ -23,6 +30,7 @@ export function registerDeliveryPartnerWalletRoutes(app: Express): void {
   app.get(
     '/api/deliveryPartner/wallet/transactions',
     authenticate,
+    requireDeliveryPartnerApproval,
     DeliveryPartnerWalletController.getMyTransactions
   );
 
@@ -30,6 +38,7 @@ export function registerDeliveryPartnerWalletRoutes(app: Express): void {
   app.get(
     '/api/deliveryPartner/wallet/payouts',
     authenticate,
+    requireDeliveryPartnerApproval,
     DeliveryPartnerWalletController.getMyPayouts
   );
 
@@ -37,6 +46,7 @@ export function registerDeliveryPartnerWalletRoutes(app: Express): void {
   app.post(
     '/api/deliveryPartner/payout/apply',
     authenticate,
+    requireDeliveryPartnerApproval,
     validateRequest(applyPayoutSchema),
     DeliveryPartnerWalletController.applyForPayout
   );

@@ -12,6 +12,9 @@ export interface SendOtpRequest {
 export interface SendOtpResponse {
   success: boolean;
   message: string;
+  isNewUser?: boolean;
+  devMode?: boolean;
+  devOtp?: string;
 }
 
 export interface VerifyOtpRequest {
@@ -22,15 +25,16 @@ export interface VerifyOtpRequest {
 export interface VerifyOtpResponse {
   success: boolean;
   message: string;
-  token?: string;
+  token: string;
   user: User;
-  requiresProfile: boolean;
+  needsProfileCompletion: boolean;
+  devMode?: boolean;
 }
 
 export interface CompleteProfileRequest {
-  username: string;
-  bio?: string;
-  avatar?: string;
+  name: string;
+  contactNumber: string;
+  role?: 'user' | 'seller' | 'deliveryPartner';
 }
 
 export interface CompleteProfileResponse {

@@ -7,6 +7,7 @@ import { registerAuthRoutes } from './auth/auth.routes.js';
 // Buyer Routes
 import { registerAddressRoutes } from './buyer/address.routes.js';
 import { registerPaymentRoutes } from './buyer/payment.routes.js';
+import { registerRazorpayRoutes } from './buyer/razorpay.routes.js';
 import { registerNotificationRoutes } from './buyer/notification.routes.js';
 import { registerCartRoutes } from './buyer/cart.routes.js';
 import { registerOrderRoutes } from './buyer/order.routes.js';
@@ -17,6 +18,7 @@ import { registerWishlistRoutes } from './buyer/wishlist.routes.js';
 // Admin Routes
 import { registerAdminDeliveryRoutes } from './admin/delivery.routes.js';
 import { registerAdminWalletRoutes } from './admin/wallet.routes.js';
+import { registerAdminWithdrawalRoutes } from './admin/withdrawal.routes.js';
 import { registerAdminTicketRoutes } from './admin/ticket.routes.js';
 import { registerAdminSellerRoutes } from './admin/seller.routes.js';
 import { registerAdminDashboardRoutes } from './admin/dashboard.routes.js';
@@ -28,6 +30,7 @@ import { registerAdminOrderRoutes } from './admin/order.routes.js';
 import { registerAdminBannerRoutes } from './admin/banner.routes.js';
 import { registerAdminGiftCardRoutes } from './admin/giftCard.routes.js';
 import { registerAdminRewardRoutes } from './admin/reward.routes.js';
+import { registerAdminApplicationRoutes } from './admin/application.routes.js';
 
 // Seller Routes
 import {
@@ -41,6 +44,8 @@ import {
   registerSellerBusinessRoutes,
   registerSellerSettingsRoutes,
   registerSellerStoreRoutes,
+  registerSellerApplicationRoutes,
+  registerSellerWalletRoutes,
 } from './seller/index.js';
 import { registerSellerDeliveryRoutes } from './seller/delivery.routes.js';
 
@@ -81,6 +86,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ============================================
   registerAddressRoutes(app);
   registerPaymentRoutes(app);
+  registerRazorpayRoutes(app);
   registerNotificationRoutes(app);
   registerCartRoutes(app);
   registerWishlistRoutes(app);
@@ -102,12 +108,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerSellerBusinessRoutes(app);
   registerSellerSettingsRoutes(app);
   registerSellerStoreRoutes(app);
+  registerSellerApplicationRoutes(app);
+  registerSellerWalletRoutes(app);
 
   // ============================================
   // ADMIN ROUTES
   // ============================================
   registerAdminDeliveryRoutes(app);
   registerAdminWalletRoutes(app);
+  registerAdminWithdrawalRoutes(app);
   registerAdminTicketRoutes(app);
   registerAdminSellerRoutes(app);
   registerAdminDashboardRoutes(app);
@@ -119,6 +128,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerAdminBannerRoutes(app);
   registerAdminGiftCardRoutes(app);
   registerAdminRewardRoutes(app);
+  registerAdminApplicationRoutes(app);
 
   // ============================================
   // DELIVERY PARTNER ROUTES

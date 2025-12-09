@@ -169,7 +169,16 @@ export default function ProductsPage() {
                     <SelectItem value="all">All Categories</SelectItem>
                     {categories?.map((category: Category) => (
                       <SelectItem key={category.id} value={category.id.toString()}>
-                        {category.name}
+                        <div className="flex items-center gap-2">
+                          {category.image && (
+                            <img
+                              src={category.image}
+                              alt={category.name}
+                              className="h-5 w-5 rounded object-cover"
+                            />
+                          )}
+                          <span>{category.name}</span>
+                        </div>
                       </SelectItem>
                     ))}
                   </SelectContent>

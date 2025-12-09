@@ -35,6 +35,8 @@ export const UPLOAD_PATHS = {
   // Public uploads (accessible to all)
   BANNER: () => 'public/banners',
   PROMOTION: () => 'public/promotions',
+  CATEGORY_ICONS: () => 'public/categories/icons',
+  SUBCATEGORY_IMAGES: () => 'public/categories/subcategories',
 
   // Admin uploads
   ADMIN_PROFILE: (userId: number) => `admin/user-${userId}/profile`,

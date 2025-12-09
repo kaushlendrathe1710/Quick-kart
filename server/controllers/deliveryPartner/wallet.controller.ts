@@ -9,7 +9,7 @@ import { DELIVERY_PARTNER_CONFIG } from '@server/constants';
  */
 export class DeliveryPartnerWalletController {
   /**
-   * Get wallet for current delivery partner
+   * Get wallet
    * GET /api/deliveryPartner/wallet
    */
   static async getMyWallet(req: AuthenticatedRequest, res: Response) {
@@ -22,7 +22,7 @@ export class DeliveryPartnerWalletController {
         });
       }
 
-      const wallet = await walletService.getWalletByPartnerId(userId);
+      const wallet = await walletService.getWalletByUserId(userId);
 
       if (!wallet) {
         return res.status(404).json({
@@ -70,7 +70,8 @@ export class DeliveryPartnerWalletController {
 
       // Create wallet
       const newWallet = await walletService.createWallet({
-        deliveryPartnerId: userId,
+        userId: userId,
+        userType: 'deliveryPartner',
         balance: '0.00',
         totalEarnings: '0.00',
         totalWithdrawn: '0.00',
@@ -104,7 +105,7 @@ export class DeliveryPartnerWalletController {
         });
       }
 
-      const wallet = await walletService.getWalletByPartnerId(userId);
+      const wallet = await walletService.getWalletByUserId(userId);
       if (!wallet) {
         return res.status(404).json({
           success: false,
@@ -135,7 +136,7 @@ export class DeliveryPartnerWalletController {
   }
 
   /**
-   * Get wallet payouts
+   * Get payouts
    * GET /api/deliveryPartner/wallet/payouts
    */
   static async getMyPayouts(req: AuthenticatedRequest, res: Response) {
@@ -148,7 +149,7 @@ export class DeliveryPartnerWalletController {
         });
       }
 
-      const wallet = await walletService.getWalletByPartnerId(userId);
+      const wallet = await walletService.getWalletByUserId(userId);
       if (!wallet) {
         return res.status(404).json({
           success: false,
@@ -196,7 +197,7 @@ export class DeliveryPartnerWalletController {
       const { amount } = req.body;
 
       // Get wallet
-      const wallet = await walletService.getWalletByPartnerId(userId);
+      const wallet = await walletService.getWalletByUserId(userId);
       if (!wallet) {
         return res.status(404).json({
           success: false,

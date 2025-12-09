@@ -23,6 +23,7 @@ export * from './deliveryPartnerLocation.schema';
 export * from './deliveryPartnerApplication.schema';
 export * from './wallet.schema';
 export * from './walletTransaction.schema';
+export * from './withdrawalRequest.schema';
 export * from './payout.schema';
 export * from './ticket.schema';
 

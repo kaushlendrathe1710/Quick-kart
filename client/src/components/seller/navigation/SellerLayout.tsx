@@ -1,10 +1,11 @@
-import { ReactNode } from 'react';
+import { ReactNode, useMemo } from 'react';
 import { Link, useLocation } from 'wouter';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { useAppDispatch } from '@/store/hooks';
+import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { clearUser } from '@/store/slices/authSlice';
 import { authApi } from '@/api/buyer';
+import { needsApproval } from '@/utils/approval';
 import {
   LayoutDashboard,
   Package,
@@ -18,6 +19,8 @@ import {
   Bell,
   Menu,
   X,
+  Wallet,
+  FileText,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -43,54 +46,83 @@ interface SellerLayoutProps {
   children: ReactNode;
 }
 
-const navigationItems = [
-  {
-    label: 'Dashboard',
-    href: '/seller/dashboard',
-    icon: LayoutDashboard,
-  },
-  {
-    label: 'Store',
-    href: '/seller/store',
-    icon: Settings,
-  },
-  {
-    label: 'Products',
-    href: '/seller/products',
-    icon: Package,
-  },
-  {
-    label: 'Orders',
-    href: '/seller/orders',
-    icon: ShoppingCart,
-  },
-  {
-    label: 'Deliveries',
-    href: '/seller/deliveries',
-    icon: Package,
-  },
-  {
-    label: 'Inventory',
-    href: '/seller/inventory',
-    icon: Warehouse,
-  },
-  {
-    label: 'Analytics',
-    href: '/seller/analytics',
-    icon: BarChart3,
-  },
-  {
-    label: 'Profile',
-    href: '/seller/profile',
-    icon: User,
-  },
-];
-
 export function SellerLayout({ children }: SellerLayoutProps) {
   const [location, setLocation] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { data: profileData } = useSellerProfile();
   const dispatch = useAppDispatch();
+  const currentUser = useAppSelector((state) => state.auth.currentUser);
+
+  // Determine if seller needs approval
+  const showApplicationSubmission = useMemo(() => needsApproval(currentUser), [currentUser]);
+
+  // Dynamic navigation items based on approval status
+  const navigationItems = useMemo(() => {
+    const baseItems = [
+      {
+        label: 'Dashboard',
+        href: '/seller/dashboard',
+        icon: LayoutDashboard,
+      },
+      {
+        label: 'Profile',
+        href: '/seller/profile',
+        icon: User,
+      },
+    ];
+
+    // If seller needs approval, show application submission
+    if (showApplicationSubmission) {
+      return [
+        ...baseItems,
+        {
+          label: 'Submit Application',
+          href: '/seller/application',
+          icon: FileText,
+        },
+      ];
+    }
+
+    // If approved, show all features
+    return [
+      ...baseItems,
+      {
+        label: 'Store',
+        href: '/seller/store',
+        icon: Settings,
+      },
+      {
+        label: 'Products',
+        href: '/seller/products',
+        icon: Package,
+      },
+      {
+        label: 'Orders',
+        href: '/seller/orders',
+        icon: ShoppingCart,
+      },
+      {
+        label: 'Deliveries',
+        href: '/seller/deliveries',
+        icon: Package,
+      },
+      {
+        label: 'Inventory',
+        href: '/seller/inventory',
+        icon: Warehouse,
+      },
+      {
+        label: 'Analytics',
+        href: '/seller/analytics',
+        icon: BarChart3,
+      },
+      {
+        label: 'Wallet',
+        href: '/seller/wallet',
+        icon: Wallet,
+      },
+    ];
+  }, [showApplicationSubmission]);
 
   const seller = (profileData as any)?.data?.user;
 

@@ -10,3 +10,4 @@ export * from './orders.keys';
 export * from './analytics.keys';
 export * from './inventory.keys';
 export * from './profile.keys';
+export * from './wallet.keys';

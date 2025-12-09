@@ -179,10 +179,17 @@ export function PublicRoute({ children }: { children: ReactNode }) {
 /**
  * Auth Redirect Component
  * Redirects authenticated users based on their role
+ * Does not redirect if profile completion is required
  */
 export function AuthRedirect() {
   const currentUser = useSelector((state: RootState) => state.auth.currentUser);
   const isAuthenticated = useSelector((state: RootState) => state.auth.isAuthenticated);
+  const requiresProfile = useSelector((state: RootState) => state.auth.requiresProfile);
+
+  // Don't redirect if user needs to complete profile
+  if (requiresProfile) {
+    return null;
+  }
 
   // Redirect admins to admin dashboard
   if (isAuthenticated && currentUser?.role === 'admin') {

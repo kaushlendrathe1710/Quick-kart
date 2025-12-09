@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useLocation } from 'wouter';
+import { useLocation, useSearch } from 'wouter';
 import { useMutation } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -31,8 +31,9 @@ const otpSchema = z.object({
 });
 
 const profileSchema = z.object({
-  username: z.string().min(3, 'Username must be at least 3 characters'),
-  bio: z.string().optional(),
+  name: z.string().min(2, 'Name must be at least 2 characters'),
+  contactNumber: z.string().regex(/^\+?[1-9]\d{9,14}$/, 'Invalid contact number'),
+  role: z.enum(['user', 'seller', 'deliveryPartner']).optional(),
 });
 
 type EmailForm = z.infer<typeof emailSchema>;
@@ -41,11 +42,18 @@ type ProfileForm = z.infer<typeof profileSchema>;
 
 export default function AuthPage() {
   const [, setLocation] = useLocation();
+  const searchParams = useSearch();
   const dispatch = useAppDispatch();
   const [step, setStep] = useState<'email' | 'otp' | 'profile'>('email');
   const [email, setEmail] = useState('');
   const [resendDisabled, setResendDisabled] = useState(true);
   const [countdown, setCountdown] = useState(30);
+
+  // Get role from URL parameter (only 'seller' or 'deliveryPartner' allowed, else default to 'user')
+  const urlParams = new URLSearchParams(searchParams);
+  const roleParamRaw = urlParams.get('role');
+  const roleParam: 'seller' | 'deliveryPartner' | 'user' =
+    roleParamRaw === 'seller' || roleParamRaw === 'deliveryPartner' ? roleParamRaw : 'user';
 
   // Email form
   const emailForm = useForm<EmailForm>({
@@ -78,18 +86,25 @@ export default function AuthPage() {
   const verifyOtpMutation = useMutation({
     mutationFn: authApi.verifyOtp,
     onSuccess: async (data) => {
-      toast.success(data.message || 'Login successful');
-
-      // Check user role and handle accordingly
-      const userRole = data.user?.role;
-
       // Store token
       if (data.token) {
         dispatch(setToken(data.token));
       }
 
-      // Store user (works for all roles: buyer, seller, admin, etc.)
+      // Store user
       dispatch(setUser(data.user));
+
+      // Check if profile completion is needed
+      if (data.needsProfileCompletion) {
+        toast.info('Please complete your profile');
+        dispatch(setRequiresProfile(true));
+        setStep('profile');
+        return;
+      }
+
+      // Profile is complete, proceed with login
+      toast.success(data.message || 'Login successful');
+      const userRole = data.user?.role;
 
       // Sync guest cart with database cart for buyers
       if (userRole === 'user') {
@@ -101,29 +116,26 @@ export default function AuthPage() {
             toast.success('Cart synced successfully');
           } catch (error) {
             console.error('Failed to sync cart:', error);
-            // Don't show error to user, cart sync is not critical
           }
         }
       }
 
       // Role-based redirect
       if (userRole === 'seller') {
-        toast.success('Welcome to Seller Dashboard!');
-        setLocation('/seller/dashboard');
+        if (data.user.isApproved) {
+          toast.success('Welcome to Seller Dashboard!');
+          setLocation('/seller/dashboard');
+        } else {
+          toast.info('Your account is pending approval');
+          setLocation('/seller/dashboard');
+        }
       } else if (userRole === 'admin') {
         toast.success('Welcome to Admin Panel!');
         setLocation('/admin/dashboard');
-      } else if (userRole === 'user') {
-        // Buyer login
-        if (data.requiresProfile) {
-          dispatch(setRequiresProfile(true));
-          setStep('profile');
-        } else {
-          setLocation('/');
-        }
+      } else if (userRole === 'deliveryPartner') {
+        toast.info('Please download the delivery partner app to continue');
+        setLocation('/delivery-partner/app-download');
       } else {
-        // Other roles (delivery_partner, etc.)
-        toast.success('Login successful!');
         setLocation('/');
       }
     },
@@ -139,7 +151,19 @@ export default function AuthPage() {
       toast.success(data.message || 'Profile completed successfully');
       dispatch(setUser(data.user));
       dispatch(setRequiresProfile(false));
-      setLocation('/');
+
+      // Role-based redirect after profile completion
+      const userRole = data.user?.role;
+
+      if (userRole === 'seller') {
+        toast.info('Your seller account is pending approval. Please submit your application.');
+        setLocation('/seller/dashboard');
+      } else if (userRole === 'deliveryPartner') {
+        toast.info('Please download the delivery partner app to continue');
+        setLocation('/delivery-partner/app-download');
+      } else {
+        setLocation('/');
+      }
     },
     onError: (error: any) => {
       toast.error(error || 'Failed to complete profile');
@@ -189,7 +213,11 @@ export default function AuthPage() {
   };
 
   const handleProfileSubmit = (data: ProfileForm) => {
-    completeProfileMutation.mutate(data);
+    completeProfileMutation.mutate({
+      name: data.name,
+      contactNumber: data.contactNumber,
+      role: roleParam, // Use the role determined from URL param or default 'user'
+    });
   };
 
   const handleResendOtp = () => {
@@ -302,31 +330,47 @@ export default function AuthPage() {
           {/* Step 3: Complete Profile */}
           {step === 'profile' && (
             <form onSubmit={profileForm.handleSubmit(handleProfileSubmit)} className="space-y-4">
+              {roleParam && (
+                <div className="rounded-md bg-blue-50 p-3 text-sm text-blue-800">
+                  {roleParam === 'seller' && 'You are signing up as a Seller'}
+                  {roleParam === 'deliveryPartner' && 'You are signing up as a Delivery Partner'}
+                </div>
+              )}
               <div>
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="name">
+                  Full Name <span className="text-red-500">*</span>
+                </Label>
                 <Input
-                  id="username"
+                  id="name"
                   type="text"
-                  placeholder="johndoe"
+                  placeholder="John Doe"
                   className="mt-1"
-                  {...profileForm.register('username')}
+                  {...profileForm.register('name')}
                 />
-                {profileForm.formState.errors.username && (
+                {profileForm.formState.errors.name && (
                   <p className="mt-1 text-sm text-red-600">
-                    {profileForm.formState.errors.username.message}
+                    {profileForm.formState.errors.name.message}
                   </p>
                 )}
               </div>
               <div>
-                <Label htmlFor="bio">Bio (Optional)</Label>
+                <Label htmlFor="contactNumber">
+                  Contact Number <span className="text-red-500">*</span>
+                </Label>
                 <Input
-                  id="bio"
-                  type="text"
-                  placeholder="Tell us about yourself"
+                  id="contactNumber"
+                  type="tel"
+                  placeholder="+919876543210"
                   className="mt-1"
-                  {...profileForm.register('bio')}
+                  {...profileForm.register('contactNumber')}
                 />
+                {profileForm.formState.errors.contactNumber && (
+                  <p className="mt-1 text-sm text-red-600">
+                    {profileForm.formState.errors.contactNumber.message}
+                  </p>
+                )}
               </div>
+              <input type="hidden" {...profileForm.register('role')} value={roleParam || 'user'} />
               <Button type="submit" className="w-full" disabled={completeProfileMutation.isPending}>
                 {completeProfileMutation.isPending ? (
                   <>

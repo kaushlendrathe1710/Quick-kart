@@ -7,7 +7,7 @@ export default function Footer() {
   return (
     <footer className="mt-auto border-t bg-gray-50">
       <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 gap-8 md:grid-cols-4">
+        <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-5">
           {/* About */}
           <div>
             <h3 className="mb-4 text-lg font-semibold">Quick-kart</h3>
@@ -56,6 +56,23 @@ export default function Footer() {
                 <a href="#" className="text-gray-600 hover:text-primary">
                   FAQ
                 </a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Partner With Us */}
+          <div>
+            <h3 className="mb-4 text-lg font-semibold">Partner With Us</h3>
+            <ul className="space-y-2 text-sm">
+              <li>
+                <Link href="/auth?role=seller">
+                  <a className="text-gray-600 hover:text-primary">Become a Seller</a>
+                </Link>
+              </li>
+              <li>
+                <Link href="/auth?role=deliveryPartner">
+                  <a className="text-gray-600 hover:text-primary">Become a Delivery Partner</a>
+                </Link>
               </li>
             </ul>
           </div>

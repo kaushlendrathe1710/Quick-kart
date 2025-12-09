@@ -100,14 +100,14 @@ export async function createCategory(data: {
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '');
 
-  const result = await db
-    .insert(categories)
-    .values({
-      ...data,
-      slug,
-      image: data.icon, // Map icon to image field
-    })
-    .returning();
+  const updateData: any = { ...data, slug };
+  // Map icon parameter to image field (schema uses 'image')
+  if (data.icon !== undefined) {
+    updateData.image = data.icon;
+    delete updateData.icon;
+  }
+
+  const result = await db.insert(categories).values(updateData).returning();
   return result[0];
 }
 
@@ -123,12 +123,16 @@ export async function updateCategory(
     isActive?: boolean;
   }
 ): Promise<Category | undefined> {
+  const updateData: any = { ...data, updatedAt: new Date() };
+  // Map icon parameter to image field (schema uses 'image')
+  if (data.icon !== undefined) {
+    updateData.image = data.icon;
+    delete updateData.icon;
+  }
+
   const result = await db
     .update(categories)
-    .set({
-      ...data,
-      updatedAt: new Date(),
-    })
+    .set(updateData)
     .where(eq(categories.id, categoryId))
     .returning();
 

@@ -95,7 +95,15 @@ export default function HomePage() {
               <Link key={category.id} href={`/products?category=${category.id}`}>
                 <a className="group">
                   <div className="overflow-hidden rounded-lg border bg-white p-6 text-center transition-all hover:shadow-md">
-                    <Package className="mx-auto mb-2 h-8 w-8 text-primary" />
+                    {category.image ? (
+                      <img
+                        src={category.image}
+                        alt={category.name}
+                        className="mx-auto mb-2 h-12 w-12 rounded object-cover"
+                      />
+                    ) : (
+                      <Package className="mx-auto mb-2 h-8 w-8 text-primary" />
+                    )}
                     <h3 className="font-semibold group-hover:text-primary">{category.name}</h3>
                   </div>
                 </a>

@@ -34,3 +34,9 @@ export const createOrderSchema = z.object({
 });
 
 export type CreateOrderInput = z.infer<typeof createOrderSchema>;
+
+// Extended order type with items and address for API responses
+export interface OrderWithDetails extends Order {
+  items?: OrderItem[];
+  address?: any;
+}

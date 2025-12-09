@@ -11,6 +11,7 @@ import { clearCart } from './cart.service';
 
 interface OrderWithItems extends Order {
   items: OrderItem[];
+  address?: any;
 }
 
 /**
@@ -321,4 +322,61 @@ export async function cancelOrder(orderId: number, userId: number): Promise<void
       })
       .where(eq(orders.id, orderId));
   });
+}
+
+/**
+ * Update order with Razorpay payment details
+ */
+export async function updateOrderWithRazorpayDetails(
+  orderId: number,
+  razorpayOrderId: string,
+  razorpayPaymentId: string,
+  razorpaySignature: string,
+  paymentMethod?: string
+): Promise<void> {
+  await db
+    .update(orders)
+    .set({
+      razorpayOrderId,
+      razorpayPaymentId,
+      razorpaySignature,
+      paymentMethod,
+      paymentStatus: 'completed',
+      orderStatus: 'confirmed',
+      updatedAt: new Date(),
+    })
+    .where(eq(orders.id, orderId));
+}
+
+/**
+ * Update order with earnings breakdown
+ */
+export async function updateOrderEarnings(
+  orderId: number,
+  earnings: {
+    platformCommission: string;
+    sellerEarnings: string;
+  }
+): Promise<void> {
+  await db
+    .update(orders)
+    .set({
+      platformCommission: earnings.platformCommission,
+      sellerEarnings: earnings.sellerEarnings,
+      updatedAt: new Date(),
+    })
+    .where(eq(orders.id, orderId));
+}
+
+/**
+ * Get order by Razorpay order ID
+ */
+export async function getOrderByRazorpayOrderId(razorpayOrderId: string): Promise<Order | null> {
+  const result = await db
+    .select()
+    .from(orders)
+    .where(eq(orders.razorpayOrderId, razorpayOrderId))
+    .limit(1);
+
+  return result[0] || null;
 }

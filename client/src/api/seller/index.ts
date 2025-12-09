@@ -12,3 +12,4 @@ export * from './inventory';
 export * from './profile';
 export * from './delivery';
 export * from './store';
+export * from './wallet';
