@@ -24,6 +24,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { MapPin, Plus, CreditCard, Loader2, CheckCircle2 } from 'lucide-react';
+import { useRazorpay } from '@/hooks/buyer';
 
 /**
  * Checkout Page - Order placement with address selection
@@ -31,10 +32,11 @@ import { MapPin, Plus, CreditCard, Loader2, CheckCircle2 } from 'lucide-react';
 export default function CheckoutPage() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
-  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const { isAuthenticated, currentUser } = useAppSelector((state) => state.auth);
   const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
   const [showAddressDialog, setShowAddressDialog] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState<'cod' | 'online'>('cod');
+  const { initiatePayment, isCreatingOrder: isProcessingPayment } = useRazorpay();
 
   // Fetch cart
   const { data: cart, isLoading: loadingCart } = useQuery({
@@ -153,16 +155,37 @@ export default function CheckoutPage() {
       return;
     }
 
+    // For online payment, use Razorpay flow
+    if (paymentMethod === 'online') {
+      const orderData = {
+        addressId: selectedAddressId,
+        notes: undefined,
+      };
+
+      await initiatePayment(orderData, {
+        onSuccess: () => {
+          toast.success('Payment successful!');
+          queryClient.invalidateQueries({ queryKey: cartKeys.all });
+          queryClient.invalidateQueries({ queryKey: orderKeys.all });
+          // Navigate to orders page after successful payment
+          setTimeout(() => setLocation('/orders'), 1000);
+        },
+        onError: (error) => {
+          toast.error(error || 'Payment failed');
+        },
+        prefill: {
+          name: currentUser?.name || undefined,
+          email: currentUser?.email || undefined,
+          contact: currentUser?.contactNumber || undefined,
+        },
+      });
+      return;
+    }
+
+    // For COD, create order directly
     const orderData = {
       addressId: selectedAddressId,
-      totalAmount: subtotal.toFixed(2),
-      finalAmount: total.toFixed(2),
-      items: cartItems.map((item) => ({
-        productId: item.productId,
-        quantity: item.quantity,
-        price: item.product?.price.toString() || '0',
-        finalPrice: item.product?.price.toString() || '0',
-      })),
+      notes: undefined,
     };
 
     createOrderMutation.mutate(orderData);
@@ -444,15 +467,17 @@ export default function CheckoutPage() {
                   className="mt-6 w-full"
                   size="lg"
                   onClick={handlePlaceOrder}
-                  disabled={!selectedAddressId || createOrderMutation.isPending}
+                  disabled={
+                    !selectedAddressId || createOrderMutation.isPending || isProcessingPayment
+                  }
                 >
-                  {createOrderMutation.isPending ? (
+                  {createOrderMutation.isPending || isProcessingPayment ? (
                     <>
                       <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      Placing Order...
+                      {paymentMethod === 'online' ? 'Processing Payment...' : 'Placing Order...'}
                     </>
                   ) : (
-                    'Place Order'
+                    <>{paymentMethod === 'online' ? 'Pay Now' : 'Place Order'}</>
                   )}
                 </Button>
 

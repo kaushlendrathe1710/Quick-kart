@@ -137,7 +137,7 @@ export function PaginatedSubcategorySelector({
             role="combobox"
             aria-expanded={open}
             className="w-full justify-between"
-            disabled={categoryName && !categoryId && open}
+            disabled={!!(categoryName && !categoryId && open)}
           >
             {selectedSubcategory ? selectedSubcategory.name : placeholder}
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />

@@ -1,9 +1,14 @@
 import apiClient from '../apiClient';
-import type { Order, CreateOrderInput } from '@shared/types';
+import type { Order, OrderWithDetails } from '@shared/types';
 
 /**
  * Orders API - Order management
  */
+
+export interface CreateOrderFromCartInput {
+  addressId: number;
+  notes?: string;
+}
 
 export interface UserOrdersResponse {
   orders: Order[];
@@ -20,7 +25,7 @@ export const ordersApi = {
    * Create order from cart
    */
   createOrder: async (
-    data: CreateOrderInput
+    data: CreateOrderFromCartInput
   ): Promise<{ success: boolean; message: string; order: Order }> => {
     const response = await apiClient.post('/orders', data);
     return response.data;
@@ -41,7 +46,7 @@ export const ordersApi = {
   /**
    * Get specific order by ID
    */
-  getOrderById: async (orderId: number): Promise<Order> => {
+  getOrderById: async (orderId: number): Promise<OrderWithDetails> => {
     const response = await apiClient.get(`/orders/${orderId}`);
     return response.data.data;
   },

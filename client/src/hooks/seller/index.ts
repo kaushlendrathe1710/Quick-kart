@@ -11,3 +11,4 @@ export * from './useSellerAnalytics';
 export * from './useSellerProfile';
 export * from './useSellerDelivery';
 export * from './useSellerStore';
+export * from './useSellerWallet';
