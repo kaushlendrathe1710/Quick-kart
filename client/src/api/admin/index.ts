@@ -8,3 +8,4 @@ export * as payoutsApi from './payouts';
 export * as bannersApi from './banners';
 export * as categoriesApi from './categories';
 export * from './withdrawal';
+export * as usersApi from './users';

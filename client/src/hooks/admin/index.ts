@@ -8,3 +8,4 @@ export * from './useAdminPayouts';
 export * from './useAdminBanners';
 export * from './useAdminCategories';
 export * from './useAdminWithdrawals';
+export * from './useAdminUsers';

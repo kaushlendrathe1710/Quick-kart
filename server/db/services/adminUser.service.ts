@@ -93,6 +93,15 @@ export async function getUserById(userId: number) {
 }
 
 /**
+ * Update user details
+ */
+export async function updateUserDetails(userId: number, updateData: any) {
+  const result = await db.update(users).set(updateData).where(eq(users.id, userId)).returning();
+
+  return result[0];
+}
+
+/**
  * Update user role
  */
 export async function updateUserRole(userId: number, role: string) {
@@ -157,43 +166,68 @@ export async function getUserStats() {
       .from(users)
       .groupBy(users.role, users.isApproved, users.rejected);
 
-    let totalUsers = 0;
-    let activeUsers = 0;
-    let rejectedUsers = 0;
-    let pendingApproval = 0;
-    const roleBreakdown: Record<string, number> = {};
+    let total = 0;
+    let buyers = 0;
+    let sellers = 0;
+    let deliveryPartners = 0;
+    let approvedSellers = 0;
+    let pendingSellers = 0;
+    let approvedDeliveryPartners = 0;
+    let pendingDeliveryPartners = 0;
 
     stats.forEach((stat) => {
       const count = stat.count;
-      totalUsers += count;
 
-      if (stat.rejected) {
-        rejectedUsers += count;
-      } else {
-        activeUsers += count;
-        if (!stat.isApproved && (stat.role === 'seller' || stat.role === 'deliveryPartner')) {
-          pendingApproval += count;
+      if (!stat.rejected) {
+        total += count;
+
+        if (stat.role === 'user') {
+          buyers += count;
+        } else if (stat.role === 'seller') {
+          sellers += count;
+          if (stat.isApproved) {
+            approvedSellers += count;
+          } else {
+            pendingSellers += count;
+          }
+        } else if (stat.role === 'deliveryPartner') {
+          deliveryPartners += count;
+          if (stat.isApproved) {
+            approvedDeliveryPartners += count;
+          } else {
+            pendingDeliveryPartners += count;
+          }
         }
       }
-
-      roleBreakdown[stat.role] = (roleBreakdown[stat.role] || 0) + count;
     });
 
     return {
-      totalUsers,
-      activeUsers,
-      rejectedUsers,
-      pendingApproval,
-      roleBreakdown,
+      success: true,
+      data: {
+        total,
+        buyers,
+        sellers,
+        deliveryPartners,
+        approvedSellers,
+        pendingSellers,
+        approvedDeliveryPartners,
+        pendingDeliveryPartners,
+      },
     };
   } catch (error) {
     console.error('Error fetching user stats:', error);
     return {
-      totalUsers: 0,
-      activeUsers: 0,
-      rejectedUsers: 0,
-      pendingApproval: 0,
-      roleBreakdown: {},
+      success: false,
+      data: {
+        total: 0,
+        buyers: 0,
+        sellers: 0,
+        deliveryPartners: 0,
+        approvedSellers: 0,
+        pendingSellers: 0,
+        approvedDeliveryPartners: 0,
+        pendingDeliveryPartners: 0,
+      },
     };
   }
 }

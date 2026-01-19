@@ -19,6 +19,7 @@ import {
   FolderTree,
   FileText,
   DollarSign,
+  Users,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -47,6 +48,11 @@ const navigationItems = [
     label: 'Dashboard',
     href: '/admin/dashboard',
     icon: LayoutDashboard,
+  },
+  {
+    label: 'Users',
+    href: '/admin/users',
+    icon: Users,
   },
   {
     label: 'Tickets',

@@ -50,6 +50,74 @@ export async function getUserStats(req: AuthenticatedRequest, res: Response) {
 }
 
 /**
+ * Get single user by ID
+ * GET /api/admin/users/:id
+ */
+export async function getUserById(req: AuthenticatedRequest, res: Response) {
+  try {
+    const userId = parseInt(req.params.id);
+
+    if (isNaN(userId)) {
+      return res.status(400).json({ error: 'Invalid user ID' });
+    }
+
+    const user = await adminUserService.getUserById(userId);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({
+      success: true,
+      message: 'User retrieved successfully',
+      data: user,
+    });
+  } catch (error) {
+    console.error('Error fetching user:', error);
+    res.status(500).json({ error: 'Failed to fetch user' });
+  }
+}
+
+/**
+ * Update user details
+ * PUT /api/admin/users/:id
+ */
+export async function updateUser(req: AuthenticatedRequest, res: Response) {
+  try {
+    const userId = parseInt(req.params.id);
+    const { name, email, contactNumber, role, isApproved } = req.body;
+
+    if (isNaN(userId)) {
+      return res.status(400).json({ error: 'Invalid user ID' });
+    }
+
+    // Build update object with only provided fields
+    const updateData: any = {};
+    if (name !== undefined) updateData.name = name;
+    if (email !== undefined) updateData.email = email;
+    if (contactNumber !== undefined) updateData.contactNumber = contactNumber;
+    if (role !== undefined) updateData.role = role;
+    if (isApproved !== undefined) updateData.isApproved = isApproved;
+    updateData.updatedAt = new Date();
+
+    const user = await adminUserService.updateUserDetails(userId, updateData);
+
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    res.json({
+      success: true,
+      message: 'User updated successfully',
+      data: user,
+    });
+  } catch (error) {
+    console.error('Error updating user:', error);
+    res.status(500).json({ error: 'Failed to update user' });
+  }
+}
+
+/**
  * Update user role
  * PUT /api/admin/users/:id/role
  */
