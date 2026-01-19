@@ -46,6 +46,7 @@ import AdminCategoriesPage from './pages/admin/Categories';
 import AdminBannersPage from './pages/admin/Banners';
 import AdminApplicationsPage from './pages/admin/Applications';
 import AdminWithdrawalsPage from './pages/admin/AdminWithdrawalsPage';
+import AdminUsersPage from './pages/admin/Users';
 
 // Common Pages
 import NotFoundPage from './pages/common/NotFoundPage';
@@ -225,6 +226,11 @@ export default function AppRouter() {
       <Route path="/admin/withdrawals">
         <AdminRoute>
           <AdminWithdrawalsPage />
+        </AdminRoute>
+      </Route>
+      <Route path="/admin/users">
+        <AdminRoute>
+          <AdminUsersPage />
         </AdminRoute>
       </Route>
 
