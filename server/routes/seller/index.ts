@@ -15,3 +15,4 @@ export { registerSellerSettingsRoutes } from './settings.routes';
 export { registerSellerStoreRoutes } from './store.routes';
 export { registerSellerApplicationRoutes } from './application.routes';
 export { registerSellerWalletRoutes } from './wallet.routes';
+export { registerSellerTicketRoutes } from './ticket.routes';

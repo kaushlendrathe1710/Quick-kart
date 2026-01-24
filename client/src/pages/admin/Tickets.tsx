@@ -7,6 +7,7 @@ import {
   useCloseTicket,
   useDeleteTicket,
 } from '@/hooks/admin';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Search,
   Filter,
@@ -66,6 +67,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import type { Ticket } from '@/api/admin/tickets';
+import { AdminSellerTicketsTab } from '@/components/admin/AdminSellerTicketsTab';
 
 /**
  * Admin Tickets Management Page
@@ -242,186 +244,204 @@ export default function AdminTicketsPage() {
             Manage support tickets from sellers and delivery partners
           </p>
         </div>
+        {/* Tabs for Delivery Partner and Seller Tickets */}
+        <Tabs defaultValue="delivery-partners" className="w-full">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="delivery-partners">Delivery Partner Tickets</TabsTrigger>
+            <TabsTrigger value="sellers">Seller Tickets</TabsTrigger>
+          </TabsList>
 
-        {/* Filters */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Filter className="h-5 w-5" />
-              Filters
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-4">
-              {/* Search */}
-              <div className="md:col-span-2">
-                <div className="relative">
-                  <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search by ID, subject, or description..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-8"
-                  />
-                </div>
-              </div>
+          <TabsContent value="delivery-partners" className="space-y-6">
+            {/* Delivery Partner Tickets - Original Content */}
+            {/* Filters */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Filter className="h-5 w-5" />
+                  Filters
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 md:grid-cols-4">
+                  {/* Search */}
+                  <div className="md:col-span-2">
+                    <div className="relative">
+                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Search by ID, subject, or description..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-8"
+                      />
+                    </div>
+                  </div>
 
-              {/* Status Filter */}
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  {TICKET_STATUSES.map((status) => (
-                    <SelectItem key={status.value} value={status.value}>
-                      {status.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {/* Issue Type Filter */}
-              <Select value={issueTypeFilter} onValueChange={setIssueTypeFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Filter by type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {ISSUE_TYPES.map((type) => (
-                    <SelectItem key={type.value} value={type.value}>
-                      {type.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Tickets Table */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Tickets ({filteredTickets.length})</CardTitle>
-            </div>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="space-y-3">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <Skeleton key={i} className="h-16 w-full" />
-                ))}
-              </div>
-            ) : filteredTickets.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-12 text-center">
-                <p className="text-muted-foreground">No tickets found</p>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  Try adjusting your filters or search query
-                </p>
-              </div>
-            ) : (
-              <>
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="w-[80px]">ID</TableHead>
-                        <TableHead>Subject</TableHead>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Created</TableHead>
-                        <TableHead className="w-[100px]">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {filteredTickets.map((ticket) => (
-                        <TableRow key={ticket.id}>
-                          <TableCell className="font-medium">#{ticket.id}</TableCell>
-                          <TableCell>
-                            <div className="flex flex-col">
-                              <span className="font-medium">{ticket.subject}</span>
-                              <span className="line-clamp-1 text-sm text-muted-foreground">
-                                {ticket.description}
-                              </span>
-                            </div>
-                          </TableCell>
-                          <TableCell>{renderIssueTypeBadge(ticket.issueType)}</TableCell>
-                          <TableCell>{renderStatusBadge(ticket.status)}</TableCell>
-                          <TableCell>{new Date(ticket.createdAt).toLocaleDateString()}</TableCell>
-                          <TableCell>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon">
-                                  <MoreVertical className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleViewTicket(ticket)}>
-                                  <Eye className="mr-2 h-4 w-4" />
-                                  View Details
-                                </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => handleOpenResponseDialog(ticket)}>
-                                  <MessageSquare className="mr-2 h-4 w-4" />
-                                  Add Response
-                                </DropdownMenuItem>
-                                {ticket.status !== 'resolved' && (
-                                  <DropdownMenuItem onClick={() => handleResolveTicket(ticket)}>
-                                    <CheckCircle className="mr-2 h-4 w-4" />
-                                    Mark Resolved
-                                  </DropdownMenuItem>
-                                )}
-                                {ticket.status !== 'closed' && (
-                                  <DropdownMenuItem onClick={() => handleCloseTicket(ticket)}>
-                                    <XCircle className="mr-2 h-4 w-4" />
-                                    Close Ticket
-                                  </DropdownMenuItem>
-                                )}
-                                <DropdownMenuItem
-                                  onClick={() => handleOpenDeleteDialog(ticket)}
-                                  className="text-red-600"
-                                >
-                                  <Trash2 className="mr-2 h-4 w-4" />
-                                  Delete
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </TableCell>
-                        </TableRow>
+                  {/* Status Filter */}
+                  <Select value={statusFilter} onValueChange={setStatusFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Filter by status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {TICKET_STATUSES.map((status) => (
+                        <SelectItem key={status.value} value={status.value}>
+                          {status.label}
+                        </SelectItem>
                       ))}
-                    </TableBody>
-                  </Table>
-                </div>
+                    </SelectContent>
+                  </Select>
 
-                {/* Pagination */}
-                <div className="mt-4 flex items-center justify-between">
-                  <div className="text-sm text-muted-foreground">
-                    Showing {filteredTickets.length} ticket(s)
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      disabled={page === 1}
-                    >
-                      <ChevronLeft className="h-4 w-4" />
-                      Previous
-                    </Button>
-                    <span className="text-sm">Page {page}</span>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setPage((p) => p + 1)}
-                      disabled={filteredTickets.length < limit}
-                    >
-                      Next
-                      <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
+                  {/* Issue Type Filter */}
+                  <Select value={issueTypeFilter} onValueChange={setIssueTypeFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Filter by type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ISSUE_TYPES.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
+            {/* Tickets Table */}
+            <Card>
+              <CardHeader>
+                <div className="flex items-center justify-between">
+                  <CardTitle>Tickets ({filteredTickets.length})</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {isLoading ? (
+                  <div className="space-y-3">
+                    {[1, 2, 3, 4, 5].map((i) => (
+                      <Skeleton key={i} className="h-16 w-full" />
+                    ))}
+                  </div>
+                ) : filteredTickets.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-center">
+                    <p className="text-muted-foreground">No tickets found</p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Try adjusting your filters or search query
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="rounded-md border">
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead className="w-[80px]">ID</TableHead>
+                            <TableHead>Subject</TableHead>
+                            <TableHead>Type</TableHead>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Created</TableHead>
+                            <TableHead className="w-[100px]">Actions</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {filteredTickets.map((ticket) => (
+                            <TableRow key={ticket.id}>
+                              <TableCell className="font-medium">#{ticket.id}</TableCell>
+                              <TableCell>
+                                <div className="flex flex-col">
+                                  <span className="font-medium">{ticket.subject}</span>
+                                  <span className="line-clamp-1 text-sm text-muted-foreground">
+                                    {ticket.description}
+                                  </span>
+                                </div>
+                              </TableCell>
+                              <TableCell>{renderIssueTypeBadge(ticket.issueType)}</TableCell>
+                              <TableCell>{renderStatusBadge(ticket.status)}</TableCell>
+                              <TableCell>
+                                {new Date(ticket.createdAt).toLocaleDateString()}
+                              </TableCell>
+                              <TableCell>
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon">
+                                      <MoreVertical className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => handleViewTicket(ticket)}>
+                                      <Eye className="mr-2 h-4 w-4" />
+                                      View Details
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() => handleOpenResponseDialog(ticket)}
+                                    >
+                                      <MessageSquare className="mr-2 h-4 w-4" />
+                                      Add Response
+                                    </DropdownMenuItem>
+                                    {ticket.status !== 'resolved' && (
+                                      <DropdownMenuItem onClick={() => handleResolveTicket(ticket)}>
+                                        <CheckCircle className="mr-2 h-4 w-4" />
+                                        Mark Resolved
+                                      </DropdownMenuItem>
+                                    )}
+                                    {ticket.status !== 'closed' && (
+                                      <DropdownMenuItem onClick={() => handleCloseTicket(ticket)}>
+                                        <XCircle className="mr-2 h-4 w-4" />
+                                        Close Ticket
+                                      </DropdownMenuItem>
+                                    )}
+                                    <DropdownMenuItem
+                                      onClick={() => handleOpenDeleteDialog(ticket)}
+                                      className="text-red-600"
+                                    >
+                                      <Trash2 className="mr-2 h-4 w-4" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    </div>
+
+                    {/* Pagination */}
+                    <div className="mt-4 flex items-center justify-between">
+                      <div className="text-sm text-muted-foreground">
+                        Showing {filteredTickets.length} ticket(s)
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setPage((p) => Math.max(1, p - 1))}
+                          disabled={page === 1}
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                          Previous
+                        </Button>
+                        <span className="text-sm">Page {page}</span>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setPage((p) => p + 1)}
+                          disabled={filteredTickets.length < limit}
+                        >
+                          Next
+                          <ChevronRight className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>{' '}
+          </TabsContent>
+
+          <TabsContent value="sellers">
+            {/* Seller Tickets Tab */}
+            <AdminSellerTicketsTab />
+          </TabsContent>
+        </Tabs>{' '}
       </div>
 
       {/* View Ticket Dialog */}

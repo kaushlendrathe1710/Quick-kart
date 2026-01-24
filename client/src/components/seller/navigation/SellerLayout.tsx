@@ -21,6 +21,7 @@ import {
   X,
   Wallet,
   FileText,
+  LifeBuoy,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -120,6 +121,11 @@ export function SellerLayout({ children }: SellerLayoutProps) {
         label: 'Wallet',
         href: '/seller/wallet',
         icon: Wallet,
+      },
+      {
+        label: 'Support Tickets',
+        href: '/seller/tickets',
+        icon: LifeBuoy,
       },
     ];
   }, [showApplicationSubmission]);

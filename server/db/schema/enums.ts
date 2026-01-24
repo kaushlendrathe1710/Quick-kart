@@ -68,3 +68,14 @@ export const ticketStatusEnum = pgEnum('ticket_status', [
   'resolved',
   'closed',
 ]);
+
+// Seller ticket issue type enum
+export const sellerIssueTypeEnum = pgEnum('seller_issue_type', [
+  'product_related',
+  'order_issue',
+  'payment_issue',
+  'account_related',
+  'technical_problem',
+  'payout_issue',
+  'other',
+]);

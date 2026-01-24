@@ -19,3 +19,4 @@ export * from './delivery.service';
 export * from './deliveryRating.service';
 export * from './wallet.service';
 export * from './ticket.service';
+export * from './sellerTicket.service';
