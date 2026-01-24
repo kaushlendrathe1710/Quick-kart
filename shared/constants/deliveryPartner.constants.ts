@@ -97,6 +97,14 @@ export const TICKET_STATUS = {
   CLOSED: 'closed',
 } as const;
 
+// Ticket Status Labels (shared across delivery partner and seller tickets)
+export const TICKET_STATUS_LABELS: Record<string, string> = {
+  open: 'Open',
+  in_progress: 'In Progress',
+  resolved: 'Resolved',
+  closed: 'Closed',
+};
+
 // Payment methods for payouts
 export const PAYOUT_PAYMENT_METHODS = {
   BANK_TRANSFER: 'bank_transfer',

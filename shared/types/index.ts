@@ -10,6 +10,7 @@ export * from './product.types';
 export * from './cart.types';
 export * from './order.types';
 export * from './deliveryPartner.types';
+export * from './seller.types';
 export * from './wishlist.types';
 // Note: wallet.types has duplicate TransactionStatus and TransactionType exports with deliveryPartner.types
 // Only export specific types from wallet.types to avoid conflicts

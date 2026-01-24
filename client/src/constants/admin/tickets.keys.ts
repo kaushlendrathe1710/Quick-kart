@@ -18,3 +18,13 @@ export const adminTicketKeys = {
   detail: (id: number) => [...adminTicketKeys.details(), id] as const,
   open: () => [...adminTicketKeys.all, 'open'] as const,
 } as const;
+
+export const adminSellerTicketKeys = {
+  all: ['admin', 'seller-tickets'] as const,
+  lists: () => [...adminSellerTicketKeys.all, 'list'] as const,
+  list: (filters: { page?: number; limit?: number; status?: string; issueType?: string }) =>
+    [...adminSellerTicketKeys.lists(), filters] as const,
+  details: () => [...adminSellerTicketKeys.all, 'detail'] as const,
+  detail: (id: number) => [...adminSellerTicketKeys.details(), id] as const,
+  open: () => [...adminSellerTicketKeys.all, 'open'] as const,
+} as const;

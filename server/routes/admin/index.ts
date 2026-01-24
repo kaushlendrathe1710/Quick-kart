@@ -1,5 +1,6 @@
 export { registerAdminDeliveryRoutes } from './delivery.routes';
 export { registerAdminTicketRoutes } from './ticket.routes';
+export { registerAdminSellerTicketRoutes } from './sellerTicket.routes';
 export { registerAdminWalletRoutes } from './wallet.routes';
 export { registerAdminSellerRoutes } from './seller.routes';
 export { registerAdminDashboardRoutes } from './dashboard.routes';

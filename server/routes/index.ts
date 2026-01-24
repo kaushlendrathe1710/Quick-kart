@@ -20,6 +20,7 @@ import { registerAdminDeliveryRoutes } from './admin/delivery.routes.js';
 import { registerAdminWalletRoutes } from './admin/wallet.routes.js';
 import { registerAdminWithdrawalRoutes } from './admin/withdrawal.routes.js';
 import { registerAdminTicketRoutes } from './admin/ticket.routes.js';
+import { registerAdminSellerTicketRoutes } from './admin/sellerTicket.routes.js';
 import { registerAdminSellerRoutes } from './admin/seller.routes.js';
 import { registerAdminDashboardRoutes } from './admin/dashboard.routes.js';
 import { registerAdminProductRoutes } from './admin/product.routes.js';
@@ -46,6 +47,7 @@ import {
   registerSellerStoreRoutes,
   registerSellerApplicationRoutes,
   registerSellerWalletRoutes,
+  registerSellerTicketRoutes,
 } from './seller/index.js';
 import { registerSellerDeliveryRoutes } from './seller/delivery.routes.js';
 
@@ -110,6 +112,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerSellerStoreRoutes(app);
   registerSellerApplicationRoutes(app);
   registerSellerWalletRoutes(app);
+  registerSellerTicketRoutes(app);
 
   // ============================================
   // ADMIN ROUTES
@@ -118,6 +121,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerAdminWalletRoutes(app);
   registerAdminWithdrawalRoutes(app);
   registerAdminTicketRoutes(app);
+  registerAdminSellerTicketRoutes(app);
   registerAdminSellerRoutes(app);
   registerAdminDashboardRoutes(app);
   registerAdminProductRoutes(app);

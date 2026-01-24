@@ -34,6 +34,7 @@ import SellerStorePage from './pages/seller/Store';
 import SellerDeliveriesPage from './pages/seller/Deliveries';
 import SellerApplicationPage from './pages/seller/Application';
 import SellerWalletPage from './pages/seller/SellerWalletPage';
+import SellerTicketsPage from './pages/seller/Tickets';
 
 // Delivery Partner Pages
 import DeliveryPartnerAppDownloadPage from './pages/deliveryPartner/AppDownloadPage';
@@ -182,6 +183,11 @@ export default function AppRouter() {
       <Route path="/seller/wallet">
         <SellerRoute>
           <SellerWalletPage />
+        </SellerRoute>
+      </Route>
+      <Route path="/seller/tickets">
+        <SellerRoute>
+          <SellerTicketsPage />
         </SellerRoute>
       </Route>
 

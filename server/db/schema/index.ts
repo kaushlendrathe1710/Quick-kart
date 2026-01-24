@@ -26,6 +26,7 @@ export * from './walletTransaction.schema';
 export * from './withdrawalRequest.schema';
 export * from './payout.schema';
 export * from './ticket.schema';
+export * from './sellerTicket.schema';
 
 // Seller schemas
 export * from './sellerSettings.schema';
